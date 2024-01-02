@@ -1,6 +1,18 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define DEBUG false
+
+#if DEBUG
+#define log(f, ...) printf(f "\n", ##__VA_ARGS__)
+#else
+#define log(...)
+#endif
+
+#define warn(prog, f, ...) printf("Warning at [%d:%d] ('%c'): " f "\n", prog->x, prog->y, prog->instructs[prog->y][prog->x], ##__VA_ARGS__)
+
+#define STRINGIZE(x) #x
+
 enum instruct {
     I_NULL  = '?',
     I_PASS  = ' ',
@@ -9,6 +21,8 @@ enum instruct {
     I_LEFT  = '<',
     I_RIGHT = '>',
     I_EXIT  = 'X',
+    I_PRINT = '.',
+    I_READ  = ',',
 } __attribute__((__packed__));
 
 enum direction {
@@ -26,13 +40,20 @@ struct program {
     enum direction direction;
     enum instruct **instructs;
     bool running;
+    char *stack;
+    char *stack_pointer;
 };
+
+#define STACK_SIZE 512
 
 // enum instruct loadInstruct(char *instruct);
 // void loadInstructs(struct program *prog);
 struct program *loadProgram(char *path);
+// int stack(struct program *prog, char b);
+// int unstack(struct program *prog, char *b);
 // void execInstruct(struct program *prog);
 // void nextInstruct(struct program *prog);
+// void initStack(struct program *prog);
 int runProgram(struct program *prog);
 void freeProgram(struct program *prog);
 
