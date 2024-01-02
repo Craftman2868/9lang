@@ -8,6 +8,9 @@
 
 char renderInstruct(enum instruct instruct)
 {
+    if (instruct == I_NULL)
+        return '?';
+
     return (char) instruct;
 }
 
