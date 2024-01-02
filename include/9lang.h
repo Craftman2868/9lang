@@ -1,7 +1,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define DEBUG false
+#define DEBUG true
+#define OUT_IS_ERROR false  // true  : raise an error when cursor get out
+                            // false : just exit
 
 #if DEBUG
 #define log(f, ...) printf(f "\n", ##__VA_ARGS__)
@@ -22,7 +24,11 @@ enum instruct {
     I_RIGHT = '>',
     I_EXIT  = 'X',
     I_PRINT = '.',
+    I_PRTALL= ':',  // print all
     I_READ  = ',',
+    I_ASCII = '"',
+    I_ESCAPE= '\\',
+    I_0     = '0',
 } __attribute__((__packed__));
 
 enum direction {
@@ -40,6 +46,9 @@ struct program {
     enum direction direction;
     enum instruct **instructs;
     bool running;
+    bool ascii_mode;
+    bool escape;
+    bool uppercase;
     char *stack;
     char *stack_pointer;
 };

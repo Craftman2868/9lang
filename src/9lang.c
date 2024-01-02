@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <malloc.h>
+#include <ctype.h>
 
 
 char renderInstruct(enum instruct instruct)
@@ -46,6 +47,22 @@ enum instruct loadInstruct(char *instruct)
                 0,1,0,
                 0,1,0)
         return I_READ;
+    IF_INSTRUCT(1,0,1,  // Enable/disable ascii mode:
+                0,0,0,  //   each next character will be read as ascii character
+                0,0,0)  //   and added to the stack
+        return I_ASCII;
+    IF_INSTRUCT(1,0,0,  // Escape (only available in ascii mode)
+                0,1,0,
+                0,0,1)
+        return I_ESCAPE;
+    IF_INSTRUCT(0,1,0,  // Print all : Print until NUL character or stack empty
+                0,0,0,
+                0,1,0)
+        return I_PRTALL;
+    IF_INSTRUCT(0,1,0,  // Zero/null : add a NUL byte to the stack
+                1,0,1,
+                0,1,0)
+        return I_0;
 
     // Unknown instruct
     return I_NULL;
@@ -144,10 +161,16 @@ struct program *loadProgram(char *path)
 int stack(struct program *prog, char b)
 {
     if (prog->stack == NULL)
-        return -1;  // Error: stack not initialized
+    {
+        progError(prog, "Stack not initialized");  // Not possible
+        return -1;
+    }
 
     if (prog->stack_pointer - prog->stack >= STACK_SIZE)
-        return 1;  // Error: stack full
+    {
+        progError(prog, "Stack full (stack size = " STRINGIZE(STACK_SIZE) ")");
+        return 1;
+    }
 
     *(prog->stack_pointer++) = b;
 
@@ -157,10 +180,16 @@ int stack(struct program *prog, char b)
 int unstack(struct program *prog, char *b)
 {
     if (prog->stack == NULL)
-        return -1;  // Error: stack not initialized
+    {
+        progError(prog, "Stack not initialized");  // Not possible
+        return -1;
+    }
 
     if (prog->stack_pointer == prog->stack)
-        return 1;  // Error: stack empty
+    {
+        progError(prog, "Stack empty");
+        return 1;
+    }
 
     *b = *(--prog->stack_pointer);
 
@@ -181,6 +210,45 @@ int execInstruct(struct program *prog)
 
     log("Executing '%c' at %d:%d", renderInstruct(instruct), prog->x, prog->y);
 
+    if (prog->ascii_mode)
+    {
+        if (prog->escape)
+        {
+            switch (instruct)
+            {
+            case I_0:
+                stack(prog, 0);
+                break;
+            case I_UP:
+                prog->uppercase = true;
+                break;
+            case I_DOWN:
+                prog->uppercase = false;
+                break;
+            default:
+                stack(prog, (prog->uppercase?toupper:tolower)(instruct));
+                break;
+            }
+            prog->escape = false;
+            return 0;  // Success
+        }
+
+        switch (instruct)
+        {
+        case I_ASCII:
+            prog->ascii_mode = false;
+            break;
+        case I_ESCAPE:
+            prog->escape = true;
+            break;
+        default:
+            stack(prog, (prog->uppercase?toupper:tolower)(instruct));
+            break;
+        }
+
+        return 0;  // Success
+    }
+
     switch (instruct)
     {
     case I_PASS:
@@ -194,35 +262,50 @@ int execInstruct(struct program *prog)
     case I_EXIT:
         prog->running = false;
         break;
-    case I_NULL:  // unknown
-        progError(prog, "Unknown instruction\n");
-        break;
     case I_PRINT:
         retval = unstack(prog, &c);
 
-        if (retval == -1)
-            progError(prog, "Stack not initialized");  // Not possible
-        else if (retval == 1)
-            progError(prog, "Stack full (stack size = " STRINGIZE(STACK_SIZE) ")");
-        else // retval == 0
+        if (retval == 0)
             putc(c, stdout);
+
+        return retval != 0;
+    case I_PRTALL:
+        while (prog->stack_pointer != prog->stack && unstack(prog, &c) == 0)
+        {
+            if (c == 0)
+                break;
+            putc(c, stdout);
+        }
         break;
     case I_READ:
         c = getchar();
-
-        retval = stack(prog, c);
-
-        if (retval == -1)
-            progError(prog, "Stack not initialized");  // Not possible
-        else if (retval == 1)
-            progError(prog, "Stack empty");
-
+        stack(prog, c);
         break;
+    case I_ASCII:
+        prog->ascii_mode = !prog->ascii_mode;
+        break;
+    case I_ESCAPE:
+        progError(prog, "Escape used outside ascii mode");
+        return 1;  // Error
+    case I_0:
+        stack(prog, 0);
+        break;
+    case I_NULL:  // Unknown instruction
+        progError(prog, "Unknown instruction\n");
+        return 1;  // Error
     default:
         warn(prog, "Not implemented");
         break;  // Not implemented
     }
+
+    return 0;  // Success
 }
+
+#if OUT_IS_ERROR
+#define CURSOR_OUT(dir) progError(prog, "Can't go " dir " anymore")
+#else
+#define CURSOR_OUT(dir) prog->running = false
+#endif
 
 void nextInstruct(struct program *prog)
 {
@@ -230,22 +313,34 @@ void nextInstruct(struct program *prog)
     {
     case D_UP:
         if (prog->y <= 0)
-            return progError(prog, "Can't go up anymore");
+        {
+            CURSOR_OUT("up");
+            return;
+        }
         prog->y--;
         break;
     case D_DOWN:
         if (prog->y >= prog->h - 1)
-            return progError(prog, "Can't go down anymore");
+        {
+            CURSOR_OUT("down");
+            return;
+        }
         prog->y++;
         break;
     case D_LEFT:
         if (prog->x <= 0)
-            return progError(prog, "Can't go left anymore");
+        {
+            CURSOR_OUT("left");
+            return;
+        }
         prog->x--;
         break;
     case D_RIGHT:
         if (prog->x >= prog->w - 1)
-            return progError(prog, "Can't go right anymore");
+        {
+            CURSOR_OUT("right");
+            return;
+        }
         prog->x++;
         break;
     }
@@ -268,12 +363,11 @@ int runProgram(struct program *prog)
     initStack(prog);
 
     prog->running = true;
-    while (prog->running)
-    {
-        execInstruct(prog);
-        if (prog->running)
-            nextInstruct(prog);
-    }
+    while (prog->running && execInstruct(prog) == 0 && prog->running)
+        nextInstruct(prog);
+
+    if (prog->ascii_mode)
+        printf("Error: program finished in ascii mode\n");
 
     return 0;  // TODO
 }
