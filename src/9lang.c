@@ -386,7 +386,7 @@ void freeProgram(struct program *prog)
     }
 
     if (prog->stack_pointer != prog->stack)
-        log("Warning: %d bytes remaining on the stack after program end.", prog->stack_pointer - prog->stack);
+        log("Warning: %d bytes remaining on the stack after the program end.", prog->stack_pointer - prog->stack);
 
     if (prog->stack)
         free(prog->stack);

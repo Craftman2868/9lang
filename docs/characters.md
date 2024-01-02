@@ -98,8 +98,8 @@ Here is a table of all characters in [*ascii mode*](ascii_mode.md).
 
 > - `-`
 >   ```
->   XXX
 >   ...
+>   XXX
 >   ...
 >   ```
 
