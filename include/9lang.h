@@ -1,31 +1,27 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define IW(prog) (prog->w / 3 + 1)
-#define IH(prog) (prog->h / 3 + 1)
-
 enum instruct {
-    I_NULL,
-    I_PASS,
-    I_UP,
-    I_DOWN,
-    I_LEFT,
-    I_RIGHT,
-    I_EXIT,
+    I_NULL  = '?',
+    I_PASS  = ' ',
+    I_UP    = '^',
+    I_DOWN  = 'v',
+    I_LEFT  = '<',
+    I_RIGHT = '>',
+    I_EXIT  = 'X',
 } __attribute__((__packed__));
 
 enum direction {
-    D_UP,
-    D_DOWN,
-    D_LEFT,
-    D_RIGHT,
-};
+    D_UP    = '^',
+    D_DOWN  = 'v',
+    D_LEFT  = '<',
+    D_RIGHT = '>',
+} __attribute__((__packed__));
 
 #define DEFAULT_DIR D_RIGHT
 
 struct program {
     uint16_t w, h;
-    char *data;
     uint16_t x, y;
     enum direction direction;
     enum instruct **instructs;

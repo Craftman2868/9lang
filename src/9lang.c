@@ -7,52 +7,34 @@
 
 char renderInstruct(enum instruct instruct)
 {
-    switch (instruct)
-    {
-    case I_PASS:
-        return ' ';
-    case I_UP:
-        return '^';
-    case I_DOWN:
-        return 'v';
-    case I_LEFT:
-        return '<';
-    case I_RIGHT:
-        return '>';
-    case I_EXIT:
-        return 'X';
-    case I_NULL:
-        return '?';
-    default:
-        return 0;  // Not implemented
-    }
+    return (char) instruct;
 }
 
 enum instruct loadInstruct(char *instruct)
 {
 #define IF_INSTRUCT(...) if (memcmp(instruct, (char []) {__VA_ARGS__}, 3*3) == 0)
 
-    IF_INSTRUCT(0,0,0,  // PASS
+    IF_INSTRUCT(0,0,0,  // Pass
                 0,0,0,
                 0,0,0)
         return I_PASS;
-    IF_INSTRUCT(0,1,0,  // UP
+    IF_INSTRUCT(0,1,0,  // Up
                 1,1,1,
                 0,0,0)
         return I_UP;
-    IF_INSTRUCT(0,0,0,  // DOWN
+    IF_INSTRUCT(0,0,0,  // Down
                 1,1,1,
                 0,1,0)
         return I_DOWN;
-    IF_INSTRUCT(0,1,0,  // LEFT
+    IF_INSTRUCT(0,1,0,  // Left
                 1,1,0,
                 0,1,0)
         return I_LEFT;
-    IF_INSTRUCT(0,1,0,  // RIGHT
+    IF_INSTRUCT(0,1,0,  // Right
                 0,1,1,
                 0,1,0)
         return I_RIGHT;
-    IF_INSTRUCT(1,0,1,  // EXIT
+    IF_INSTRUCT(1,0,1,  // Exit
                 0,1,0,
                 1,0,1)
         return I_EXIT;
@@ -63,23 +45,38 @@ enum instruct loadInstruct(char *instruct)
 #undef IF_INSTRUCT
 }
 
-void loadInstructs(struct program *prog)
+void loadInstructs(struct program *prog, FILE *f)
 {
-    char instruct[3*3];
+    char instructs[prog->h][prog->w][3*3] = {};
+    char c;
 
-    prog->instructs = malloc(IH(prog) * sizeof (char *));
+    prog->x = prog->y = 0;
+    do {
+        c = fgetc(f);
 
-    for (prog->y = 0; prog->y < IH(prog); prog->y++)
-        prog->instructs[prog->y] = malloc(IW(prog) * sizeof (char));
-
-    for (prog->x = 0; prog->x < prog->w + 3; prog->x+=3)
-    {
-        for (prog->y = 0; prog->y < prog->h + 3; prog->y+=3)
+        if (c == '\n' || c == '\r' || c == EOF)
         {
-            memcpy(instruct + 0 * 3, &prog->data[prog->w * (prog->y + 0) + prog->x], 3);
-            memcpy(instruct + 1 * 3, &prog->data[prog->w * (prog->y + 1) + prog->x], 3);
-            memcpy(instruct + 2 * 3, &prog->data[prog->w * (prog->y + 2) + prog->x], 3);            
-            prog->instructs[prog->y / 3][prog->x / 3] = loadInstruct(instruct);
+            memset(&instructs[prog->y / 3][prog->x / 3][(prog->y % 3) * 3 + (prog->x % 3)], 0, 3 - (prog->x % 3));
+            prog->y++;
+            prog->x = 0;
+        }
+        else
+        {
+            instructs[prog->y / 3][prog->x / 3][(prog->y % 3) * 3 + (prog->x % 3)] = (c == ' ') ? 0 : 1;
+            prog->x++;
+        }
+    } while (c != EOF);
+
+    prog->instructs = malloc(prog->h * sizeof (enum instruct *));
+
+    for (prog->y = 0; prog->y < prog->h; prog->y++)
+        prog->instructs[prog->y] = malloc(prog->w * sizeof (enum instruct));
+
+    for (prog->y = 0; prog->y < prog->h; prog->y++)
+    {
+        for (prog->x = 0; prog->x < prog->w; prog->x++)
+        {  
+            prog->instructs[prog->y][prog->x] = loadInstruct(instructs[prog->y][prog->x]);
         }
     }
 
@@ -92,6 +89,8 @@ struct program *loadProgram(char *path)
     struct program *prog;
     uint16_t curLineLength = 0;
     char c;
+    uint16_t w = 0, h = 0;
+    char *data;
 
     if (f == NULL)
         return NULL;  // Error opening file
@@ -106,9 +105,9 @@ struct program *loadProgram(char *path)
 
         if (c == '\n' || c == '\r' || c == EOF)
         {
-            prog->h++;
-            if (curLineLength > prog->w)
-                prog->w = curLineLength;
+            h++;
+            if (curLineLength > w)
+                w = curLineLength;
             curLineLength = 0;
         }
         else
@@ -117,36 +116,33 @@ struct program *loadProgram(char *path)
         }
     } while (c != EOF);
 
-    if (prog->w * prog->h == 0)
+    if (w * h == 0)
         return prog;  // Nothing to load
 
-    prog->data = malloc(prog->w * prog->h * sizeof (char));
+    prog->w = w / 3 + (w % 3 ? 1 : 0);
+    prog->h = h / 3 + (h % 3 ? 1 : 0);
 
     rewind(f);
 
-    prog->x = prog->y = 0;
+    loadInstructs(prog, f);
 
-    do {
-        c = fgetc(f);
-
-        if (c == '\n' || c == '\r' || c == EOF)
-        {
-            memset(&prog->data[prog->w * prog->y + prog->x], 0, prog->w - prog->x);
-            prog->y++;
-            prog->x = 0;
-        }
-        else
-        {
-            prog->data[prog->w * prog->y + prog->x] = (c == ' ' | c == '\t') ? 0 : 1;
-            prog->x++;
-        }
-    } while (c != EOF);
+//     do {
+//         c = fgetc(f);
+// 
+//         if (c == '\n' || c == '\r' || c == EOF)
+//         {
+//             memset(&prog->data[prog->w * prog->y + prog->x], 0, prog->w - prog->x);
+//             prog->y++;
+//             prog->x = 0;
+//         }
+//         else
+//         {
+//             prog->data[prog->w * prog->y + prog->x] = (c == ' ' | c == '\t') ? 0 : 1;
+//             prog->x++;
+//         }
+//     } while (c != EOF);
 
     fclose(f);
-
-    prog->x = prog->y = 0;
-
-    loadInstructs(prog);
 
     return prog;
 }
@@ -155,7 +151,7 @@ int execInstruct(struct program *prog)
 {
     enum instruct instruct = prog->instructs[prog->y][prog->x];
 
-    // printf("Executing %c at %d:%d\n", renderInstruct(instruct), prog->x, prog->y);
+    printf("Executing '%c' at %d:%d\n", renderInstruct(instruct), prog->x, prog->y);
 
     switch (instruct)
     {
@@ -165,7 +161,7 @@ int execInstruct(struct program *prog)
     case I_DOWN:
     case I_LEFT:
     case I_RIGHT:
-        prog->direction = instruct - I_UP;
+        prog->direction = instruct;
         break;
     case I_EXIT:
         prog->running = false;
@@ -188,7 +184,7 @@ void nextInstruct(struct program *prog)
         prog->y--;
         break;
     case D_DOWN:
-        if (prog->y >= IH(prog))
+        if (prog->y >= prog->h)
             return progError(prog, "Can't go down anymore");
         prog->y++;
         break;
@@ -198,7 +194,7 @@ void nextInstruct(struct program *prog)
         prog->x--;
         break;
     case D_RIGHT:
-        if (prog->x >= IW(prog))
+        if (prog->x >= prog->w)
             return progError(prog, "Can't go right anymore");
         prog->x++;
         break;
@@ -210,9 +206,9 @@ int runProgram(struct program *prog)
     if (prog->instructs == NULL)  // If the program is empty
         return 0;  // Nothing to do
 
-    for (uint16_t y = 0; y < IH(prog); y++)
+    for (uint16_t y = 0; y < prog->h; y++)
     {
-        for (uint16_t x = 0; x < IW(prog); x++)
+        for (uint16_t x = 0; x < prog->w; x++)
             printf("[%c]", renderInstruct(prog->instructs[y][x]));
         printf("\n");
     }
@@ -230,9 +226,6 @@ int runProgram(struct program *prog)
 
 void freeProgram(struct program *prog)
 {
-    if (prog->data != NULL)
-        free(prog->data);
-
     if (prog->instructs != NULL)
         free(prog->instructs);
 
