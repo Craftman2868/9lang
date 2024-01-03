@@ -1,5 +1,5 @@
 import json, subprocess, os
-from sys import stderr
+from sys import stderr, argv
 import datetime
 
 CONFIG_PATH = "config.json"
@@ -212,6 +212,11 @@ def printTestRes(testStep, t, res):
 def main():
     global config
 
+    askedTests = None
+
+    if len(argv) > 1:
+        askedTests = argv[1:]
+
     changeStep("Init")
 
     printLog("Loading config...")
@@ -231,7 +236,13 @@ def main():
 
     changeStep("Test")
 
-    for testStep in testSteps():
+    ts = testSteps()
+
+    for testStep in ts:
+        if askedTests:
+            if testStep not in askedTests:
+                continue
+
         testResults[testStep] = {
             "_success": True,
             "_failure": True,
