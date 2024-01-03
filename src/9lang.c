@@ -386,8 +386,7 @@ void initStack(struct program *prog)
 
 int execInstruct(struct program *prog)
 {
-    char c;
-    int retval;
+    char a, b, c;
     enum instruct instruct = prog->instructs[prog->y][prog->x];
 
     log("Executing '%c' at %d:%d", renderInstruct(instruct), prog->x, prog->y);
@@ -437,7 +436,7 @@ int execInstruct(struct program *prog)
                 break;
             default:
                 progError(prog, "Unknown escape character");
-                return 1;
+                return 1;  // Error
             }
             prog->escape = false;
             return 0;  // Success
@@ -464,22 +463,26 @@ int execInstruct(struct program *prog)
     {
     case I_PASS:
         break;
+
+    // Directions
     case I_UP:
     case I_DOWN:
     case I_LEFT:
     case I_RIGHT:
         prog->direction = (enum direction) instruct;
         break;
+
+    // Exit
     case I_EXIT:
         prog->running = false;
         break;
+
+    // IO
     case I_PRINT:
-        retval = unstack(prog, &c);
-
-        if (retval == 0)
+        if (unstack(prog, &c) == 0)
             putc(c, stdout);
-
-        return retval != 0;
+        else
+            return 1;
     case I_PRTALL:
         while (prog->stack_pointer != prog->stack && unstack(prog, &c) == 0)
         {
@@ -490,8 +493,9 @@ int execInstruct(struct program *prog)
         break;
     case I_READ:
         c = getchar();
-        stack(prog, c);
-        break;
+        return stack(prog, c) != 0;
+
+    // Stack / Ascii mode
     case I_ASCII:
         prog->ascii_mode = !prog->ascii_mode;
         break;
@@ -499,11 +503,38 @@ int execInstruct(struct program *prog)
         progError(prog, "Escape used outside ascii mode");
         return 1;  // Error
     case I_ZERO:
-        stack(prog, 0);
+        return stack(prog, 0) != 0;
+
+    // Operators
+    case I_PLUS:
+        if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
+            stack(prog, a + b);
+        else
+            return 1;  // Error
         break;
+    case I_MINUS:
+        if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
+            stack(prog, a - b);
+        else
+            return 1;  // Error
+        break;
+    case I_MUL:
+        if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
+            stack(prog, a * b);
+        else
+            return 1;  // Error
+        break;
+    case I_DIV:
+        if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
+            stack(prog, a / b);
+        else
+            return 1;  // Error
+        break;
+
+    // Unknown / not implemented
     case I_NULL:  // Unknown instruction
         progError(prog, "Unknown instruction\n");
-        return 1;  // Error
+        return 1;  // Error    
     default:
         warn(prog, "Not implemented");
         break;  // Not implemented
