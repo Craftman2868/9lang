@@ -1,0 +1,7 @@
+{
+    "initCommand": "make -C .. test",
+    "bin": "../bin/9test",
+    "command": "{bin} {program}",
+    "testDir": "tests/",
+    "outputDir": "output/"
+}

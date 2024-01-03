@@ -8,19 +8,26 @@
 
 // Configuration
 
-#define DEBUG true
+#ifndef DEBUG
+#define DEBUG false
+#endif  // DEBUG
+
+#ifndef OUT_IS_ERROR
 #define OUT_IS_ERROR false  // true  : raise an error when the cursor get out
                             // false : just exit
+#endif  // OUT_IS_ERROR
 
+#ifndef STACK_SIZE
 #define STACK_SIZE 512
+#endif  // STACK_SIZE
 
 // End of the configuration
 
 #if DEBUG
 #define log(f, ...) fprintf(stderr, f "\n", ##__VA_ARGS__)
-#else
+#else  // !DEBUG
 #define log(...) {}
-#endif
+#endif  // DEBUG
 
 #define warn(prog, f, ...) log("Warning at [%d:%d] ('%c'): " f, prog->x, prog->y, prog->instructs[prog->y][prog->x], ##__VA_ARGS__)
 
