@@ -129,18 +129,22 @@ def testCommand(command, testConfig):
         res["timeout"] = False
         res["stderr"] = e.stderr
         res["stdout"] = e.stdout
+        res["returncode"] = None
+        if "code" in testConfig:
+            res["code"] = Ellipsis
     else:
         if "timeout" in testConfig:
             res["timeout"] = True
 
         res["stderr"] = completed_proc.stderr
         res["stdout"] = completed_proc.stdout
+        res["returncode"] = completed_proc.returncode
 
-    if "code" in testConfig:
-        res["code"] = completed_proc.returncode == testConfig["code"]
+        if "code" in testConfig:
+            res["code"] = completed_proc.returncode == testConfig["code"]
 
-    if "out" in testConfig:
-        res["out"] = completed_proc.stdout == testConfig["out"]
+        if "out" in testConfig:
+            res["out"] = completed_proc.stdout == testConfig["out"]
 
     testExpect = testConfig.get("expect", "success")
 
@@ -189,21 +193,37 @@ MAX_LENGTH = 1500
 def toString(s):
     if isinstance(s, bytes):
         s = s.decode()
+    else:
+        s = str(s)
 
     if len(s) > MAX_LENGTH:
         s = s[:MAX_LENGTH] + f"[+{len(s) - MAX_LENGTH} characters]"
 
-    return str(s)
+    return s
+
+def printTestResCond(name, success):
+    if success == True:
+        return C_GREEN + name
+    elif success == False:
+        return C_RED + name
+    else:
+        return C_YELLOW + name
+
+def printTestResConds(res):
+    return f"{C_RESET}, ".join(printTestResCond(name, success) for name, success in res.items() if name != "test" and (isinstance(success, bool) or success == Ellipsis)) + C_RESET
 
 def printTestRes(testStep, t, res):
     if res["test"]:  # success
-        printSuccess(f"{testStep}/{t} - {C_GREEN}Success: " + f"{C_RESET}, ".join(((C_GREEN if success else C_RED) + name) for name, success in res.items() if name != "test" and isinstance(success, bool)) + C_RESET)
+        printSuccess(f"{testStep}/{t} - {C_GREEN}Success: " + printTestResConds(res))
     else:
-        printError(f"{testStep}/{t} - {C_RED}Error: " + f"{C_RESET}, ".join(((C_GREEN if success else C_RED) + name) for name, success in res.items() if name != "test" and isinstance(success, bool)) + C_RESET)
+        printError(f"{testStep}/{t} - {C_RED}Error: " + printTestResConds(res))
         printError(f"{testStep}/{t} stderr:\n" + toString(res["stderr"]))
         if "out" in res and not res["out"]:
             printError(f"{testStep}/{t} stdout:\n" + toString(res["stdout"]))
-            printError(f"{testStep}/{t} expected stdout:\n" + str(res["expect"]["stdout"]))
+            printError(f"{testStep}/{t} expected stdout:\n" + str(res["expect"]["out"]))
+        if "code" in res and not res["code"]:
+            printError(f"{testStep}/{t} return code: {res['returncode']}")
+            printError(f"{testStep}/{t} expected code: {res['expect']['code']}")
     if "timeout" in res and not res["timeout"]:
         p = printSuccess if res["test"] else printError
 
@@ -265,7 +285,7 @@ def main():
         if testResults[testStep]["_success"]:
             testResults[testStep]["_failure"] = False
         
-        printSuccess(f"{testStep} done!")
+        printSuccess(f"{testStep} tested!")
 
     changeStep("Result")
 
@@ -273,22 +293,22 @@ def main():
     failed = sum([res["_failure"] for res in testResults.values()])
     other  = len(testResults) - (passed + failed)
 
-    if passed:
+    if passed or other:
         printSuccess("Passed tests:")
         for testStep, res in testResults.items():
             if res["_success"]:
                 printSuccess(f" -> {testStep}")
             elif res["_failure"]:
-                printError(f" -> {testStep}")
-            else:
                 continue
+            else:
+                printWarning(f" -> {testStep}")
             for t, r in res.items():
                 if not isinstance(r, dict):
                     continue
                 if r["test"]:
-                    printSuccess(f"    => {t}: " + f"{C_RESET}, ".join(((C_GREEN if success else C_RED) + name) for name, success in r.items() if name != "test" and isinstance(success, bool)) + C_RESET)
+                    printSuccess(f"    => {t}: " + printTestResConds(r))
 
-    if failed:
+    if failed or other:
         printError("Failed tests:")
         for testStep, res in testResults.items():
             if res["_success"]:
@@ -301,7 +321,7 @@ def main():
                 if not isinstance(r, dict):
                     continue
                 if not r["test"]:
-                    printError(f"    => {t}: " + f"{C_RESET}, ".join(((C_GREEN if success else C_RED) + name) for name, success in r.items() if name != "test" and isinstance(success, bool)) + C_RESET)
+                    printError(f"    => {t}: " + printTestResConds(r))
 
     printLog(f"[{C_GREEN}{'='*passed}{C_YELLOW}{'='*other}{C_RED}{'='*failed}{C_RESET}]")
 
