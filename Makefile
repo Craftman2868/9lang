@@ -1,7 +1,7 @@
 all: bin/9
 
 bin/9: bin src/*.c include/*.h
-	gcc -o bin/9 -Iinclude src/*.c
+	gcc -Wall -Wextra -o bin/9 -Iinclude src/*.c
 
 bin:
 	mkdir -p bin
