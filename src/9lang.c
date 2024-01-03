@@ -22,7 +22,7 @@ enum instruct loadInstruct(char *instruct)
     D_I(0,0,0,  // Pass / space
         0,0,0,
         0,0,0) I_PASS;
-    D_I(0,1,0,  // Up / Caret
+    D_I(0,1,0,  // Up / caret
         1,1,1,
         0,0,0)  I_UP;
     D_I(0,0,0,  // Down / v
@@ -212,9 +212,7 @@ enum instruct loadInstruct(char *instruct)
     D_I(0,0,0,
         1,1,1,
         1,1,1) 'W';
-    D_I(1,0,1,
-        0,1,0,
-        1,0,1) 'X';
+ // D_I(...) 'X';
     D_I(1,0,1,
         0,1,0,
         0,1,0) 'Y';
@@ -247,6 +245,7 @@ enum instruct loadInstruct(char *instruct)
     D_I(0,0,0,
         1,0,1,
         0,0,0) '~';
+
     // Unknown instruct
     return I_NULL;
 
@@ -293,12 +292,12 @@ void loadInstructs(struct program *prog, FILE *f)
 
 struct program *loadProgram(char *path)
 {
-    FILE *f = fopen(path, "r");
     struct program *prog;
-    uint16_t curLineLength = 0;
     char c;
+    uint16_t curLineLength = 0;
     uint16_t w = 0, h = 0;
-    char *data;
+
+    FILE *f = fopen(path, "r");
 
     if (f == NULL)
         return NULL;  // Error opening file
@@ -306,7 +305,7 @@ struct program *loadProgram(char *path)
     prog = malloc(sizeof (struct program));
     memset(prog, 0, sizeof (struct program));
 
-    prog->direction = DEFAULT_DIR;
+    prog->direction = DEFAULT_DIRECTION;
 
     do {
         c = fgetc(f);
@@ -469,7 +468,7 @@ int execInstruct(struct program *prog)
     case I_DOWN:
     case I_LEFT:
     case I_RIGHT:
-        prog->direction = instruct;
+        prog->direction = (enum direction) instruct;
         break;
     case I_EXIT:
         prog->running = false;
@@ -512,15 +511,14 @@ int execInstruct(struct program *prog)
 
     return 0;  // Success
 }
-
+void nextInstruct(struct program *prog)
+{
 #if OUT_IS_ERROR
 #define CURSOR_OUT(dir) progError(prog, "Can't go " dir " anymore")
 #else
 #define CURSOR_OUT(dir) prog->running = false
 #endif
 
-void nextInstruct(struct program *prog)
-{
     switch (prog->direction)
     {
     case D_UP:
@@ -556,6 +554,7 @@ void nextInstruct(struct program *prog)
         prog->x++;
         break;
     }
+#undef CURSOR_OUT
 }
 
 int runProgram(struct program *prog)
@@ -581,7 +580,7 @@ int runProgram(struct program *prog)
     if (prog->ascii_mode)
         printf("Error: program finished in ascii mode\n");
 
-    return 0;  // TODO
+    return 0;
 }
 
 void freeProgram(struct program *prog)
@@ -595,7 +594,7 @@ void freeProgram(struct program *prog)
     }
 
     if (prog->stack_pointer != prog->stack)
-        log("Warning: %d bytes remaining on the stack after the program end.", prog->stack_pointer - prog->stack);
+        log("Warning: %ld bytes remaining on the stack after the program end.", prog->stack_pointer - prog->stack);
 
     if (prog->stack)
         free(prog->stack);

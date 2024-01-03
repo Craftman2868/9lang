@@ -4,7 +4,7 @@
 // Configuration
 
 #define DEBUG false
-#define OUT_IS_ERROR false  // true  : raise an error when cursor get out
+#define OUT_IS_ERROR false  // true  : raise an error when the cursor get out
                             // false : just exit
 
 #define STACK_SIZE 512
@@ -14,7 +14,7 @@
 #if DEBUG
 #define log(f, ...) fprintf(stderr, f "\n", ##__VA_ARGS__)
 #else
-#define log(...)
+#define log(...) {}
 #endif
 
 #define warn(prog, f, ...) log("Warning at [%d:%d] ('%c'): " f, prog->x, prog->y, prog->instructs[prog->y][prog->x], ##__VA_ARGS__)
@@ -121,7 +121,7 @@ enum direction {
     D_RIGHT = '>',
 } __attribute__((__packed__));
 
-#define DEFAULT_DIR D_RIGHT
+#define DEFAULT_DIRECTION D_RIGHT
 
 struct program {
     uint16_t w, h;
@@ -134,17 +134,18 @@ struct program {
     bool uppercase;
     char *stack;
     char *stack_pointer;
-};
+} __attribute__((__packed__));
 
 // enum instruct loadInstruct(char *instruct);
 // void loadInstructs(struct program *prog);
 struct program *loadProgram(char *path);
 // int stack(struct program *prog, char b);
 // int unstack(struct program *prog, char *b);
+// void initStack(struct program *prog);
 // void execInstruct(struct program *prog);
 // void nextInstruct(struct program *prog);
-// void initStack(struct program *prog);
 int runProgram(struct program *prog);
 void freeProgram(struct program *prog);
 
+char renderInstruct(enum instruct instruct);
 void progError(struct program *prog, char *message);
