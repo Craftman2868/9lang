@@ -399,18 +399,46 @@ int execInstruct(struct program *prog)
         {
             switch (instruct)
             {
-            case I_0:
-                stack(prog, 0);
-                break;
             case I_UP:
                 prog->uppercase = true;
                 break;
             case I_DOWN:
                 prog->uppercase = false;
                 break;
-            default:
-                stack(prog, (prog->uppercase?toupper:tolower)(instruct));
+            case I_ZERO:
+                stack(prog, 0);
                 break;
+            case 'A':
+                stack(prog, '\a');
+                break;
+            case 'B':
+                stack(prog, '\b');
+                break;
+            case 'E':
+                stack(prog, '\033');
+                break;
+            case 'F':
+                stack(prog, '\f');
+                break;
+            case 'N':
+                stack(prog, '\n');
+                break;
+            case 'R':
+                stack(prog, '\r');
+                break;
+            case 'T':
+                stack(prog, '\t');
+                break;
+            case 'V':
+                stack(prog, '\v');
+                break;
+            case '\\':
+            case '"':
+                stack(prog, (char) instruct);
+                break;
+            default:
+                progError(prog, "Unknown escape character");
+                return 1;
             }
             prog->escape = false;
             return 0;  // Success
@@ -471,7 +499,7 @@ int execInstruct(struct program *prog)
     case I_ESCAPE:
         progError(prog, "Escape used outside ascii mode");
         return 1;  // Error
-    case I_0:
+    case I_ZERO:
         stack(prog, 0);
         break;
     case I_NULL:  // Unknown instruction
