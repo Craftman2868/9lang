@@ -1,0 +1,6 @@
+{
+    "program": "hello_world.9",
+    "out": "Hello, world!\n",
+    "timeout": 0.1,
+    "exit": 0
+}

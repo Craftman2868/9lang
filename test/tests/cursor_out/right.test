@@ -1,0 +1,6 @@
+{
+    "program": "right.9",
+    "out": "Error at 0:1 ('>'): Can't go right anymore\n",
+    "timeout": 0.1,
+    "code": 1
+}

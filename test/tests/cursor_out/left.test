@@ -1,0 +1,6 @@
+{
+    "program": "left.9",
+    "out": "Error at 0:1 (' '): Can't go left anymore\n",
+    "timeout": 0.1,
+    "code": 1
+}

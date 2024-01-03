@@ -1,5 +1,5 @@
 {
     "program": "program.9",
-    "timeout": 2,
+    "timeout": 0.5,
     "expect": "timeout"
 }

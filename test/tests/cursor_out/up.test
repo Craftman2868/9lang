@@ -1,0 +1,6 @@
+{
+    "program": "up.9",
+    "out": "Error at 2:0 (' '): Can't go up anymore\n",
+    "timeout": 0.1,
+    "code": 1
+}
