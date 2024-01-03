@@ -1,6 +1,6 @@
 # Ascii mode
 
-When the program is in *ascii mode*, each instruction will be converted to a character and [stacked](stack.md). The *ascii mode* can be enabled or disabled by the `"` instruction:
+When the program is in *ascii mode*, each instruction will be converted to a character and [stacked](stack.md). The *ascii mode* can be enabled or disabled using the `"` instruction:
 ```
 X.X
 ...
@@ -12,7 +12,7 @@ X.X
 
 The list of every characters is in [characters.md](characters.md).
 
-In *ascii mode*, characters can be escaped using the `\` (escape) instruction:
+In *ascii mode*, characters can be escaped using the **ESCAPE** `\` instruction:
 ```
 X..
 .X.

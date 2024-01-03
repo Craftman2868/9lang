@@ -1,11 +1,11 @@
 # Characters
 
-Here is a table of all characters in [*ascii mode*](ascii_mode.md).
+Here is a table of every characters in [*ascii mode*](ascii_mode.md).
 
 *(`.`s represent spaces and `X`s represent any other character)*
 
 
-> - ` `
+> - ` ` (space)
 >   ```
 >   ...
 >   ...
