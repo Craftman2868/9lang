@@ -183,17 +183,18 @@ int execInstruct(struct program *prog)
 
     log("Executing '%c' at %d:%d", renderInstruct(instruct), prog->x, prog->y);
 
-    if (prog->ascii_mode)
+    switch (prog->mode)
     {
-        if (prog->escape)
+    case M_ASCII:
+        if (getFlag(prog, F_ESCAPE))
         {
             switch (instruct)
             {
             case I_UP:
-                prog->uppercase = true;
+                setFlag(prog, F_UPPERCASE, true);
                 break;
             case I_DOWN:
-                prog->uppercase = false;
+                setFlag(prog, F_UPPERCASE, false);
                 break;
             case I_ZERO:
                 stack(prog, 0);
@@ -230,32 +231,29 @@ int execInstruct(struct program *prog)
                 progError(prog, "Unknown escape character");
                 return 1;  // Error
             }
-            prog->escape = false;
+            setFlag(prog, F_ESCAPE, false);
             return 0;  // Success
         }
 
         switch (instruct)
         {
         case I_ASCII:
-            prog->uppercase = false;
-            prog->ascii_mode = false;
+            resetMode(prog);
             break;
         case I_ESCAPE:
-            prog->escape = true;
+            setFlag(prog, F_ESCAPE, true);
             break;
         default:
-            stack(prog, (prog->uppercase?toupper:tolower)(instruct));
+            stack(prog, (getFlag(prog, F_UPPERCASE)?toupper:tolower)(instruct));
             break;
         }
 
         return 0;  // Success
-    }
 
-    if (prog->equal_mode)
-    {
-        if (prog->high_part && instruct == I_EQUAL)  // '=='  (is equal)
+    case M_EQUAL:
+        if (getFlag(prog, F_HIGHPART) && instruct == I_EQUAL)  // '=='  (is equal)
         {
-            prog->equal_mode = prog->high_part = false;
+            resetMode(prog);
             if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
                 return stack(prog, a == b) != 0;  // Succeess / error (stack full, not possible)
             else
@@ -274,14 +272,14 @@ int execInstruct(struct program *prog)
         else
             a = a - '0';
 
-        if (prog->high_part)
+        if (getFlag(prog, F_HIGHPART))
         {
-            prog->high_part = false;
+            setFlag(prog, F_HIGHPART, false);
             stack(prog, a * 16);
         }
         else
         {
-            prog->equal_mode = prog->high_part = false;
+            resetMode(prog);
 
             if (unstack(prog, &b) == 0)
                 stack(prog, b | a);
@@ -290,6 +288,18 @@ int execInstruct(struct program *prog)
         }
 
         return 0;  // Success
+    case M_COND:
+        if (unstack(prog, &b) != 0)
+            return 1;  // Error (stack empty)
+
+        resetMode(prog);
+        if (b == 0)
+            return 0;  // Success (don't execute the instruction)
+     // else
+        break;  // execute the instruction...
+    case M_NORMAL:
+    default:
+        break;
     }
 
     switch (instruct)
@@ -298,25 +308,25 @@ int execInstruct(struct program *prog)
         break;
 
     // Directions
-    case I_UP:
-    case I_DOWN:
-    case I_LEFT:
-    case I_RIGHT:
+    case I_UP:      // '^'
+    case I_DOWN:    // 'v'
+    case I_LEFT:    // '<'
+    case I_RIGHT:   // '>'
         prog->direction = (enum direction) instruct;
         break;
 
     // Exit
-    case I_EXIT:
+    case I_EXIT:    // 'X'
         prog->running = false;
         break;
 
     // IO
-    case I_PRINT:
+    case I_PRINT:   // "."
         if (unstack(prog, &c) == 0)
             putc(c, stdout);
         else
             return 1;  // Error (stack empty)
-    case I_PRTALL:
+    case I_PRTALL:  // ':'
         while (prog->stack_pointer != prog->stack && unstack(prog, &c) == 0)
         {
             if (c == 0)
@@ -324,64 +334,69 @@ int execInstruct(struct program *prog)
             putc(c, stdout);
         }
         break;
-    case I_READ:
+    case I_READ:    // ','
         c = getchar();
         return stack(prog, c) != 0;  // Success / error (stack full)
 
     // Stack / Ascii mode
-    case I_ASCII:
-        prog->ascii_mode = !prog->ascii_mode;
+    case I_ASCII:   // '"'
+        setMode(prog, M_ASCII);
         break;
-    case I_ESCAPE:
+    case I_ESCAPE:  // '\'
         progError(prog, "Escape used outside ascii mode");
-        return 1;  // Error
-    case I_ZERO:
+        return 1;   // Error
+    case I_ZERO:    // '0'
         return stack(prog, 0) != 0;  // Success / error (stack full)
-    case I_SHARP:
+    case I_SHARP:   // '#'
         if (peekstack(prog, &b) == 0)
             return stack(prog, b) != 0;  // Success / error (stack full)
         else
             return 1;  // Error (stack empty)
 
     // Operators
-    case I_PLUS:
+    case I_PLUS:    // '+'
         if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
             return stack(prog, a + b) != 0;  // Success / error (stack full, not possible)
         else
             return 1;  // Error (stack empty)
-    case I_MINUS:
+    case I_MINUS:   // '-'
         if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
             return stack(prog, a - b) != 0;  // Success / error (stack full, not possible)
         else
             return 1;  // Error (stack empty)
-    case I_MUL:
+    case I_MUL:     // '*'
         if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
             return stack(prog, a * b) != 0;  // Success / error (stack full, not possible)
         else
             return 1;  // Error (stack empty)
-    case I_DIV:
+    case I_DIV:     // '/'
         if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
             return stack(prog, a / b) != 0;  // Success / error (stack full, not possible)
         else
             return 1;  // Error (stack empty)
-    case I_EQUAL:
-        prog->equal_mode = true;
-        prog->high_part = true;
+    case I_EQUAL:   // '='
+        setMode(prog, M_EQUAL);
+        setFlag(prog, F_HIGHPART, true);
         break;
 
-    // Comparison operators
-    case I_OPAR:  // '('  (used as '<')
+    // Conditions
+    //   Comparison operators
+    case I_OPAR:    // '('  (used as '<')
         if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
             return stack(prog, a < b) != 0;  // Succeess / error (stack full, not possible)
         else
             return 1;  // Error (stack empty)
-    case I_CPAR:  // ')'  (used as '>')
+    case I_CPAR:    // ')'  (used as '>')
         if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
             return stack(prog, a > b) != 0;
         else
             return 1;  // Error (stack empty)
  // case I_EQUAL:  // See in 'if (prog->equal_mode)' above
  //     ...
+    //   Conditional mode
+     case I_QMARK:  // '?'
+        setMode(prog, M_COND)
+        break;
 
     // Unknown / not implemented
     case I_NULL:  // Unknown instruction
@@ -460,8 +475,8 @@ int runProgram(struct program *prog)
     while (prog->running && execInstruct(prog) == 0 && prog->running)
         nextInstruct(prog);
 
-    if (prog->ascii_mode)
-        printf("Error: program finished in ascii mode\n");
+    if (prog->mode != M_NORMAL)
+        printf("Error: program didn't finish in normal mode\n");
 
     return 0;
 }

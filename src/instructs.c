@@ -126,7 +126,7 @@ enum instruct loadInstruct(char *instruct)
         1,1,1) '=';
  // D_I(...) '>';
     D_I(1,1,1,
-        1,0,1,
+        0,0,1,
         0,1,0) '?';
     D_I(0,1,0,
         1,1,1,

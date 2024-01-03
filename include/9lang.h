@@ -35,6 +35,13 @@ enum direction {
 
 #define DEFAULT_DIRECTION D_RIGHT
 
+enum mode {
+    M_NORMAL,
+    M_ASCII,
+    M_EQUAL,
+    M_COND,
+} __attribute__((__packed__));
+
 struct program {
     // Instructs
     uint16_t w, h;
@@ -45,14 +52,25 @@ struct program {
     // Running
     bool running;
 
-    // Ascii mode
-    bool ascii_mode;
-    bool escape;
-    bool uppercase;
+    // Modes
+    enum mode mode;
+    char mode_flags;
+// Flags:
+//   Normal mode
+// (no flags)
+//   Ascii mode
+#define F_ESCAPE    0b00000001
+#define F_UPPERCASE 0x00000010
+//   Equal mode
+#define F_HIGHPART  0x00000001
+//   Conditional mode
+// (no flags)
+#define getFlag(prog, flag) (prog->mode_flags & flag)
+#define setFlag(prog, flag, val) {if (val) prog->mode_flags |= flag; else prog->mode_flags &= ~flag;}
+#define resetFlags(prog) prog->mode_flags = 0
 
-    // Equal mode
-    bool equal_mode;
-    bool high_part;
+#define setMode(prog, m) {prog->mode = m; resetFlags(prog);}
+#define resetMode(prog) setMode(prog, M_NORMAL)
 
     // Stack
     char *stack;

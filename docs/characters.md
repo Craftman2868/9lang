@@ -226,7 +226,7 @@ Here is a table of every characters in [*ascii mode*](ascii_mode.md).
 >
 >   ```
 >   XXX
->   X.X
+>   ..X
 >   .X.
 >   ```
 >
