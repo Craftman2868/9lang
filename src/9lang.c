@@ -459,6 +459,37 @@ int execInstruct(struct program *prog)
         return 0;  // Success
     }
 
+    if (prog->equal_mode)
+    {
+        if ((instruct < '0' || instruct > '9') && (instruct < 'A' || instruct > 'F'))
+        {
+            progError(prog, "Invalid instruction in equal mode");
+        }
+
+        a = (char) instruct;
+
+        if (a > 'A')
+            a = a - 'A' + 10;
+        else
+            a = a - '0';
+
+        if (prog->high_part)
+        {
+            a *= 16;
+            prog->high_part = false;
+        }
+        else
+        {
+            prog->high_part = true;
+            prog->equal_mode = false;
+        }
+        
+        if (unstack(prog, &b) == 0)
+            stack(prog, b | a);
+        else
+            return 1;  // Error (stack empty)  // Not possible
+    }
+
     switch (instruct)
     {
     case I_PASS:
@@ -482,7 +513,7 @@ int execInstruct(struct program *prog)
         if (unstack(prog, &c) == 0)
             putc(c, stdout);
         else
-            return 1;
+            return 1;  // Error (stack empty)
     case I_PRTALL:
         while (prog->stack_pointer != prog->stack && unstack(prog, &c) == 0)
         {
@@ -508,29 +539,37 @@ int execInstruct(struct program *prog)
     // Operators
     case I_PLUS:
         if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
-            stack(prog, a + b);
+            return stack(prog, a + b) != 0;
         else
-            return 1;  // Error
+            return 1;  // Error (stack empty)
         break;
     case I_MINUS:
         if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
-            stack(prog, a - b);
+            return stack(prog, a - b) != 0;
         else
-            return 1;  // Error
+            return 1;  // Error (stack empty)
         break;
     case I_MUL:
         if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
-            stack(prog, a * b);
+            return stack(prog, a * b) != 0;
         else
-            return 1;  // Error
+            return 1;  // Error (stack empty)
         break;
     case I_DIV:
         if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
-            stack(prog, a / b);
+            return stack(prog, a / b) != 0;
         else
-            return 1;  // Error
+            return 1;  // Error (stack empty)
         break;
-
+    case I_EQUAL:
+        if (stack(prog, 0) == 0)
+        {
+            prog->equal_mode = true;
+            prog->high_part = true;
+        }
+        else
+            return 1;  // Error (stack full)
+        break;
     // Unknown / not implemented
     case I_NULL:  // Unknown instruction
         progError(prog, "Unknown instruction\n");
@@ -597,8 +636,8 @@ int runProgram(struct program *prog)
     for (uint16_t y = 0; y < prog->h; y++)
     {
         for (uint16_t x = 0; x < prog->w; x++)
-            printf("[%c]", renderInstruct(prog->instructs[y][x]));
-        printf("\n");
+            fprintf(stderr, "[%c]", renderInstruct(prog->instructs[y][x]));
+        fprintf(stderr, "\n");
     }
 #endif
 

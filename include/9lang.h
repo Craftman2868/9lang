@@ -3,7 +3,7 @@
 
 // Configuration
 
-#define DEBUG false
+#define DEBUG true
 #define OUT_IS_ERROR false  // true  : raise an error when the cursor get out
                             // false : just exit
 
@@ -36,11 +36,12 @@ enum instruct {
     I_ESCAPE= '\\',
     I_ZERO  = '0',
 
-    // Operators    TODO
+    // Operators
     I_PLUS  = '+',
     I_MINUS = '-',
     I_MUL   = '*',
     I_DIV   = '/',
+    I_EQUAL = '=',
 
     // Every ascii char
     I_SPACE = ' ',
@@ -72,7 +73,7 @@ enum instruct {
     I_COLON = ':',
     I_SMCLN = ';',  // Semi-colon
     I_LOWER = '<',
-    I_EQUAL = '=',
+ // I_EQUAL = '=',
     I_HIGHER= '>',
     I_QMARK = '?',  // Question mark
     I_AT    = '@',
@@ -124,14 +125,25 @@ enum direction {
 #define DEFAULT_DIRECTION D_RIGHT
 
 struct program {
+    // Instructs
     uint16_t w, h;
     uint16_t x, y;
     enum direction direction;
     enum instruct **instructs;
+
+    // Running
     bool running;
+
+    // Ascii mode
     bool ascii_mode;
     bool escape;
     bool uppercase;
+
+    // Equal mode
+    bool equal_mode;
+    bool high_part;
+
+    // Stack
     char *stack;
     char *stack_pointer;
 } __attribute__((__packed__));
