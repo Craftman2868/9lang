@@ -208,6 +208,13 @@ Here is a table of all characters in [*ascii mode*](ascii_mode.md).
 >   .X.
 >   ```
 
+> - `=`
+>   ```
+>   XXX
+>   ...
+>   XXX
+>   ```
+
 > - `>`
 >   ```
 >   .X.

@@ -16,61 +16,241 @@ char renderInstruct(enum instruct instruct)
 
 enum instruct loadInstruct(char *instruct)
 {
-#define IF_INSTRUCT(...) if (memcmp(instruct, (char []) {__VA_ARGS__}, 3*3) == 0)
+    // Define_Instruct
+#define D_I(...) if (memcmp(instruct, (char []) {__VA_ARGS__}, 3*3) == 0) return
 
-    IF_INSTRUCT(0,0,0,  // Pass
-                0,0,0,
-                0,0,0)
-        return I_PASS;
-    IF_INSTRUCT(0,1,0,  // Up
-                1,1,1,
-                0,0,0)
-        return I_UP;
-    IF_INSTRUCT(0,0,0,  // Down
-                1,1,1,
-                0,1,0)
-        return I_DOWN;
-    IF_INSTRUCT(0,1,0,  // Left
-                1,1,0,
-                0,1,0)
-        return I_LEFT;
-    IF_INSTRUCT(0,1,0,  // Right
-                0,1,1,
-                0,1,0)
-        return I_RIGHT;
-    IF_INSTRUCT(1,0,1,  // Exit
-                0,1,0,
-                1,0,1)
-        return I_EXIT;
-    IF_INSTRUCT(0,0,0,  // Unstack and print 1 char
-                0,1,0,
-                0,0,0)
-        return I_PRINT;
-    IF_INSTRUCT(0,0,0,  // Read and stack 1 char
-                0,1,0,
-                0,1,0)
-        return I_READ;
-    IF_INSTRUCT(1,0,1,  // Enable/disable ascii mode:
-                0,0,0,  //   each next character will be read as ascii character
-                0,0,0)  //   and added to the stack
-        return I_ASCII;
-    IF_INSTRUCT(1,0,0,  // Escape (only available in ascii mode)
-                0,1,0,
-                0,0,1)
-        return I_ESCAPE;
-    IF_INSTRUCT(0,1,0,  // Print all : Print until NUL character or stack empty
-                0,0,0,
-                0,1,0)
-        return I_PRTALL;
-    IF_INSTRUCT(0,1,0,  // Zero/null : add a NUL byte to the stack
-                1,0,1,
-                0,1,0)
-        return I_0;
+    D_I(0,0,0,  // Pass / space
+        0,0,0,
+        0,0,0) I_PASS;
+    D_I(0,1,0,  // Up / Caret
+        1,1,1,
+        0,0,0)  I_UP;
+    D_I(0,0,0,  // Down / v
+        1,1,1,
+        0,1,0) I_DOWN;
+    D_I(0,1,0,  // Left / lower
+        1,1,0,
+        0,1,0) I_LEFT;
+    D_I(0,1,0,  // Right / higher
+        0,1,1,
+        0,1,0) I_RIGHT;
+    D_I(1,0,1,  // Exit / X
+        0,1,0,
+        1,0,1) I_EXIT;
+    D_I(0,0,0,  // Print / dot
+        0,1,0,  // Unstack and print 1 char
+        0,0,0) I_PRINT;
+    D_I(0,0,0,  // Read / comma
+        0,1,0,  // Read and stack 1 char
+        0,1,0) I_READ;
+    D_I(1,0,1,  // Enable/disable ascii mode: each next character will be read as ascii
+        0,0,0,  //   character and added to the stack
+        0,0,0) I_ASCII;
+    D_I(1,0,0,  // Escape (only available in ascii mode)
+        0,1,0,
+        0,0,1) I_ESCAPE;
+    D_I(0,1,0,  // Print all : Print until NUL character or stack empty
+        0,0,0,
+        0,1,0) I_PRTALL;
+    D_I(0,1,0,  // Zero/null : add a NUL byte to the stack
+        1,0,1,
+        0,1,0) I_ZERO;
 
+    // Ascii chars
+
+ // D_I(...) ' ';
+    D_I(0,0,1,
+        0,0,1,
+        0,0,1) '!';
+ // D_I(...) '"';
+    D_I(1,1,1,
+        1,1,1,
+        1,1,1) '#';
+    D_I(0,1,1,
+        1,1,1,
+        1,1,0) '$';
+    D_I(1,0,0,
+        1,1,1,
+        0,0,1) '%';
+    D_I(0,1,1,
+        1,1,0,
+        1,1,1) '&';
+    D_I(0,1,0,
+        0,0,0,
+        0,0,0) '\'';
+    D_I(0,1,0,
+        1,0,0,
+        0,1,0) '(';
+    D_I(0,1,0,
+        0,0,1,
+        0,1,0) ')';
+    D_I(1,1,1,
+        1,1,1,
+        0,0,0) '*';
+    D_I(0,1,0,
+        1,1,1,
+        0,1,0) '+';
+ // D_I(...) ',';
+    D_I(0,0,0,
+        1,1,1,
+        0,0,0) '-';
+ // D_I(...) '.';
+    D_I(0,0,1,
+        0,1,0,
+        1,0,0) '/';
+ // D_I(...) '0';
+    D_I(1,0,0,
+        1,0,0,
+        1,0,0) '1';
+    D_I(0,1,0,
+        0,0,1,
+        1,1,1) '2';
+    D_I(1,1,1,
+        0,1,1,
+        1,1,1) '3';
+    D_I(1,0,1,
+        1,1,1,
+        0,0,1) '4';
+    D_I(1,1,1,
+        1,1,0,
+        1,1,0) '5';
+    D_I(0,1,1,
+        1,1,1,
+        0,1,0) '6';
+    D_I(1,1,1,
+        0,0,1,
+        0,0,1) '7';
+    D_I(1,0,1,
+        0,0,0,
+        1,0,1) '8';
+    D_I(0,1,0,
+        1,1,1,
+        1,1,0) '9';
+    D_I(0,1,0,
+        0,0,0,
+        0,1,0) ':';
+    D_I(0,1,0,
+        0,0,0,
+        1,1,0) ';';
+ // D_I(...) '<';
+    D_I(1,1,1,
+        0,0,0,
+        1,1,1) '=';
+ // D_I(...) '>';
+    D_I(1,1,1,
+        1,0,1,
+        0,1,0) '?';
+    D_I(0,1,0,
+        1,1,1,
+        0,1,1) '@';
+    D_I(0,1,0,
+        1,1,1,
+        1,0,1) 'A';
+    D_I(1,0,0,
+        1,1,0,
+        1,1,0) 'B';
+    D_I(1,1,1,
+        1,0,0,
+        1,1,1) 'C';
+    D_I(1,1,0,
+        1,0,1,
+        1,1,0) 'D';
+    D_I(1,1,1,
+        1,1,0,
+        1,1,1) 'E';
+    D_I(1,1,1,
+        1,1,0,
+        1,0,0) 'F';
+    D_I(0,1,0,
+        1,0,1,
+        0,1,1) 'G';
+    D_I(1,0,1,
+        1,1,1,
+        1,0,1) 'H';
+    D_I(1,1,1,
+        0,1,0,
+        1,1,1) 'I';
+    D_I(1,1,1,
+        0,1,0,
+        1,1,0) 'J';
+    D_I(1,0,1,
+        1,1,0,
+        1,0,1) 'K';
+    D_I(1,0,0,
+        1,0,0,
+        1,1,1) 'L';
+    D_I(1,1,1,
+        1,1,1,
+        1,0,1) 'M';
+    D_I(0,0,0,
+        1,1,0,
+        1,0,1) 'N';
+    D_I(1,1,1,
+        1,0,1,
+        1,1,1) 'O';
+    D_I(1,1,0,
+        1,1,0,
+        1,0,0) 'P';
+    D_I(1,1,1,
+        1,0,1,
+        1,1,0) 'Q';
+    D_I(1,1,0,
+        1,1,0,
+        1,0,1) 'R';
+    D_I(0,1,1,
+        0,1,0,
+        1,1,0) 'S';
+    D_I(1,1,1,
+        0,1,0,
+        0,1,0) 'T';
+    D_I(1,0,1,
+        1,0,1,
+        1,1,1) 'U';
+    D_I(0,0,0,
+        1,0,1,
+        0,1,0) 'V';
+    D_I(0,0,0,
+        1,1,1,
+        1,1,1) 'W';
+    D_I(1,0,1,
+        0,1,0,
+        1,0,1) 'X';
+    D_I(1,0,1,
+        0,1,0,
+        0,1,0) 'Y';
+    D_I(1,1,0,
+        0,1,0,
+        0,1,1) 'Z';
+    D_I(1,1,0,
+        1,0,0,
+        1,1,0) '[';
+ // D_I(...) '\\';
+    D_I(0,1,1,
+        0,0,1,
+        0,1,1) ']';
+ // D_I(...) '^';
+    D_I(0,0,0,
+        0,0,0,
+        1,1,1) '_';
+    D_I(1,0,0,
+        0,1,0,
+        0,0,0) '`';
+    D_I(0,1,1,
+        1,1,0,
+        0,1,1) '{';
+    D_I(0,1,0,
+        0,1,0,
+        0,1,0) '|';
+    D_I(1,1,0,
+        0,1,1,
+        1,1,0) '}';
+    D_I(0,0,0,
+        1,0,1,
+        0,0,0) '~';
     // Unknown instruct
     return I_NULL;
 
-#undef IF_INSTRUCT
+#undef D_I
 }
 
 void loadInstructs(struct program *prog, FILE *f)
@@ -239,6 +419,7 @@ int execInstruct(struct program *prog)
         switch (instruct)
         {
         case I_ASCII:
+            prog->uppercase = false;
             prog->ascii_mode = false;
             break;
         case I_ESCAPE:

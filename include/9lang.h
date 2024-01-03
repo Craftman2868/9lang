@@ -3,7 +3,7 @@
 
 // Configuration
 
-#define DEBUG true
+#define DEBUG false
 #define OUT_IS_ERROR false  // true  : raise an error when cursor get out
                             // false : just exit
 

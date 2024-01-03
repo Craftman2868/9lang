@@ -19,7 +19,7 @@ X..
 ..X
 ```
 
-In *ascii mode*, when they're escaped, **UP** `^` and **DOWN** `v` instructions enable and disable uppercase mode.
+In *ascii mode*, when they're escaped, **UP** `^` and **DOWN** `v` instructions enable and disable uppercase mode. Each time you disable and enable ascii mode, uppercase mode disables.
 
   - **UP** `^` : enable uppercase mode
     ```
