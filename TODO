@@ -1,4 +1,4 @@
 # TODO
 
 [ ] Implement **IF** instruction
-[ ] Implement **PLUS** `+`, **MINUS** `-`, **MUL** `*` and **DIV** `/` operators
+[x] Implement **PLUS** `+`, **MINUS** `-`, **MUL** `*` and **DIV** `/` operators
