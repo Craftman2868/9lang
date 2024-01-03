@@ -5,6 +5,8 @@
 #include <malloc.h>
 #include <ctype.h>
 
+#include "instructs.h"
+
 
 char renderInstruct(enum instruct instruct)
 {
@@ -12,244 +14,6 @@ char renderInstruct(enum instruct instruct)
         return '?';
 
     return (char) instruct;
-}
-
-enum instruct loadInstruct(char *instruct)
-{
-    // Define_Instruct
-#define D_I(...) if (memcmp(instruct, (char []) {__VA_ARGS__}, 3*3) == 0) return
-
-    D_I(0,0,0,  // Pass / space
-        0,0,0,
-        0,0,0) I_PASS;
-    D_I(0,1,0,  // Up / caret
-        1,1,1,
-        0,0,0)  I_UP;
-    D_I(0,0,0,  // Down / v
-        1,1,1,
-        0,1,0) I_DOWN;
-    D_I(0,1,0,  // Left / lower
-        1,1,0,
-        0,1,0) I_LEFT;
-    D_I(0,1,0,  // Right / higher
-        0,1,1,
-        0,1,0) I_RIGHT;
-    D_I(1,0,1,  // Exit / X
-        0,1,0,
-        1,0,1) I_EXIT;
-    D_I(0,0,0,  // Print / dot
-        0,1,0,  // Unstack and print 1 char
-        0,0,0) I_PRINT;
-    D_I(0,0,0,  // Read / comma
-        0,1,0,  // Read and stack 1 char
-        0,1,0) I_READ;
-    D_I(1,0,1,  // Enable/disable ascii mode: each next character will be read as ascii
-        0,0,0,  //   character and added to the stack
-        0,0,0) I_ASCII;
-    D_I(1,0,0,  // Escape (only available in ascii mode)
-        0,1,0,
-        0,0,1) I_ESCAPE;
-    D_I(0,1,0,  // Print all : Print until NUL character or stack empty
-        0,0,0,
-        0,1,0) I_PRTALL;
-    D_I(0,1,0,  // Zero/null : add a NUL byte to the stack
-        1,0,1,
-        0,1,0) I_ZERO;
-
-    // Ascii chars
-
- // D_I(...) ' ';
-    D_I(0,0,1,
-        0,0,1,
-        0,0,1) '!';
- // D_I(...) '"';
-    D_I(1,1,1,
-        1,1,1,
-        1,1,1) '#';
-    D_I(0,1,1,
-        1,1,1,
-        1,1,0) '$';
-    D_I(1,0,0,
-        1,1,1,
-        0,0,1) '%';
-    D_I(0,1,1,
-        1,1,0,
-        1,1,1) '&';
-    D_I(0,1,0,
-        0,0,0,
-        0,0,0) '\'';
-    D_I(0,1,0,
-        1,0,0,
-        0,1,0) '(';
-    D_I(0,1,0,
-        0,0,1,
-        0,1,0) ')';
-    D_I(1,1,1,
-        1,1,1,
-        0,0,0) '*';
-    D_I(0,1,0,
-        1,1,1,
-        0,1,0) '+';
- // D_I(...) ',';
-    D_I(0,0,0,
-        1,1,1,
-        0,0,0) '-';
- // D_I(...) '.';
-    D_I(0,0,1,
-        0,1,0,
-        1,0,0) '/';
- // D_I(...) '0';
-    D_I(1,0,0,
-        1,0,0,
-        1,0,0) '1';
-    D_I(0,1,0,
-        0,0,1,
-        1,1,1) '2';
-    D_I(1,1,1,
-        0,1,1,
-        1,1,1) '3';
-    D_I(1,0,1,
-        1,1,1,
-        0,0,1) '4';
-    D_I(1,1,1,
-        1,1,0,
-        1,1,0) '5';
-    D_I(0,1,1,
-        1,1,1,
-        0,1,0) '6';
-    D_I(1,1,1,
-        0,0,1,
-        0,0,1) '7';
-    D_I(1,0,1,
-        0,0,0,
-        1,0,1) '8';
-    D_I(0,1,0,
-        1,1,1,
-        1,1,0) '9';
-    D_I(0,1,0,
-        0,0,0,
-        0,1,0) ':';
-    D_I(0,1,0,
-        0,0,0,
-        1,1,0) ';';
- // D_I(...) '<';
-    D_I(1,1,1,
-        0,0,0,
-        1,1,1) '=';
- // D_I(...) '>';
-    D_I(1,1,1,
-        1,0,1,
-        0,1,0) '?';
-    D_I(0,1,0,
-        1,1,1,
-        0,1,1) '@';
-    D_I(0,1,0,
-        1,1,1,
-        1,0,1) 'A';
-    D_I(1,0,0,
-        1,1,0,
-        1,1,0) 'B';
-    D_I(1,1,1,
-        1,0,0,
-        1,1,1) 'C';
-    D_I(1,1,0,
-        1,0,1,
-        1,1,0) 'D';
-    D_I(1,1,1,
-        1,1,0,
-        1,1,1) 'E';
-    D_I(1,1,1,
-        1,1,0,
-        1,0,0) 'F';
-    D_I(0,1,0,
-        1,0,1,
-        0,1,1) 'G';
-    D_I(1,0,1,
-        1,1,1,
-        1,0,1) 'H';
-    D_I(1,1,1,
-        0,1,0,
-        1,1,1) 'I';
-    D_I(1,1,1,
-        0,1,0,
-        1,1,0) 'J';
-    D_I(1,0,1,
-        1,1,0,
-        1,0,1) 'K';
-    D_I(1,0,0,
-        1,0,0,
-        1,1,1) 'L';
-    D_I(1,1,1,
-        1,1,1,
-        1,0,1) 'M';
-    D_I(0,0,0,
-        1,1,0,
-        1,0,1) 'N';
-    D_I(1,1,1,
-        1,0,1,
-        1,1,1) 'O';
-    D_I(1,1,0,
-        1,1,0,
-        1,0,0) 'P';
-    D_I(1,1,1,
-        1,0,1,
-        1,1,0) 'Q';
-    D_I(1,1,0,
-        1,1,0,
-        1,0,1) 'R';
-    D_I(0,1,1,
-        0,1,0,
-        1,1,0) 'S';
-    D_I(1,1,1,
-        0,1,0,
-        0,1,0) 'T';
-    D_I(1,0,1,
-        1,0,1,
-        1,1,1) 'U';
-    D_I(0,0,0,
-        1,0,1,
-        0,1,0) 'V';
-    D_I(0,0,0,
-        1,1,1,
-        1,1,1) 'W';
- // D_I(...) 'X';
-    D_I(1,0,1,
-        0,1,0,
-        0,1,0) 'Y';
-    D_I(1,1,0,
-        0,1,0,
-        0,1,1) 'Z';
-    D_I(1,1,0,
-        1,0,0,
-        1,1,0) '[';
- // D_I(...) '\\';
-    D_I(0,1,1,
-        0,0,1,
-        0,1,1) ']';
- // D_I(...) '^';
-    D_I(0,0,0,
-        0,0,0,
-        1,1,1) '_';
-    D_I(1,0,0,
-        0,1,0,
-        0,0,0) '`';
-    D_I(0,1,1,
-        1,1,0,
-        0,1,1) '{';
-    D_I(0,1,0,
-        0,1,0,
-        0,1,0) '|';
-    D_I(1,1,0,
-        0,1,1,
-        1,1,0) '}';
-    D_I(0,0,0,
-        1,0,1,
-        0,0,0) '~';
-
-    // Unknown instruct
-    return I_NULL;
-
-#undef D_I
 }
 
 void loadInstructs(struct program *prog, FILE *f)
@@ -354,7 +118,11 @@ int stack(struct program *prog, char b)
         return 1;
     }
 
-    *(prog->stack_pointer++) = b;
+    log("Stack byte %d", b);
+
+    *prog->stack_pointer = b;
+
+    prog->stack_pointer++;
 
     return 0;  // Success
 }
@@ -373,7 +141,31 @@ int unstack(struct program *prog, char *b)
         return 1;
     }
 
-    *b = *(--prog->stack_pointer);
+    prog->stack_pointer--;
+
+    if (b != NULL)
+        *b = *prog->stack_pointer;
+
+    log("Unstack byte %d", *prog->stack_pointer);
+
+    return 0;
+}
+
+int peekstack(struct program *prog, char *b)
+{
+    if (prog->stack == NULL)
+    {
+        progError(prog, "Stack not initialized");  // Not possible
+        return -1;
+    }
+
+    if (prog->stack_pointer == prog->stack)
+    {
+        progError(prog, "Stack empty");
+        return 1;
+    }
+
+    *b = *(prog->stack_pointer);
 
     return 0;
 }
@@ -461,6 +253,15 @@ int execInstruct(struct program *prog)
 
     if (prog->equal_mode)
     {
+        if (prog->high_part && instruct == I_EQUAL)  // '=='  (is equal)
+        {
+            prog->equal_mode = prog->high_part = false;
+            if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
+                return stack(prog, a == b) != 0;  // Succeess / error (stack full, not possible)
+            else
+                return 1;  // Error (stack empty)
+        }
+
         if ((instruct < '0' || instruct > '9') && (instruct < 'A' || instruct > 'F'))
         {
             progError(prog, "Invalid instruction in equal mode");
@@ -475,19 +276,20 @@ int execInstruct(struct program *prog)
 
         if (prog->high_part)
         {
-            a *= 16;
             prog->high_part = false;
+            stack(prog, a * 16);
         }
         else
         {
-            prog->high_part = true;
-            prog->equal_mode = false;
+            prog->equal_mode = prog->high_part = false;
+
+            if (unstack(prog, &b) == 0)
+                stack(prog, b | a);
+            else
+                return 1;  // Error (stack empty, not possible)
         }
-        
-        if (unstack(prog, &b) == 0)
-            stack(prog, b | a);
-        else
-            return 1;  // Error (stack empty)  // Not possible
+
+        return 0;  // Success
     }
 
     switch (instruct)
@@ -524,7 +326,7 @@ int execInstruct(struct program *prog)
         break;
     case I_READ:
         c = getchar();
-        return stack(prog, c) != 0;
+        return stack(prog, c) != 0;  // Success / error (stack full)
 
     // Stack / Ascii mode
     case I_ASCII:
@@ -534,42 +336,53 @@ int execInstruct(struct program *prog)
         progError(prog, "Escape used outside ascii mode");
         return 1;  // Error
     case I_ZERO:
-        return stack(prog, 0) != 0;
+        return stack(prog, 0) != 0;  // Success / error (stack full)
+    case I_SHARP:
+        if (peekstack(prog, &b) == 0)
+            return stack(prog, b) != 0;  // Success / error (stack full)
+        else
+            return 1;  // Error (stack empty)
 
     // Operators
     case I_PLUS:
         if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
-            return stack(prog, a + b) != 0;
+            return stack(prog, a + b) != 0;  // Success / error (stack full, not possible)
         else
             return 1;  // Error (stack empty)
-        break;
     case I_MINUS:
         if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
-            return stack(prog, a - b) != 0;
+            return stack(prog, a - b) != 0;  // Success / error (stack full, not possible)
         else
             return 1;  // Error (stack empty)
-        break;
     case I_MUL:
         if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
-            return stack(prog, a * b) != 0;
+            return stack(prog, a * b) != 0;  // Success / error (stack full, not possible)
         else
             return 1;  // Error (stack empty)
-        break;
     case I_DIV:
         if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
-            return stack(prog, a / b) != 0;
+            return stack(prog, a / b) != 0;  // Success / error (stack full, not possible)
         else
             return 1;  // Error (stack empty)
-        break;
     case I_EQUAL:
-        if (stack(prog, 0) == 0)
-        {
-            prog->equal_mode = true;
-            prog->high_part = true;
-        }
-        else
-            return 1;  // Error (stack full)
+        prog->equal_mode = true;
+        prog->high_part = true;
         break;
+
+    // Comparison operators
+    case I_OPAR:  // '('  (used as '<')
+        if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
+            return stack(prog, a < b) != 0;  // Succeess / error (stack full, not possible)
+        else
+            return 1;  // Error (stack empty)
+    case I_CPAR:  // ')'  (used as '>')
+        if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
+            return stack(prog, a > b) != 0;
+        else
+            return 1;  // Error (stack empty)
+ // case I_EQUAL:  // See in 'if (prog->equal_mode)' above
+ //     ...
+
     // Unknown / not implemented
     case I_NULL:  // Unknown instruction
         progError(prog, "Unknown instruction\n");

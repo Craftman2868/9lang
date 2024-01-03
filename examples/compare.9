@@ -1,0 +1,18 @@
+=== 661  " " a " "======" " 0 " " +    X X
+   6661     aaa            0 0   +++ .  X
+=== 6 1     a a   ======    0     +    X X
+
+ =  6  1  "  a  "  =  =  "  0  "  +  .  X
+                ^              ^  ^
+               ^               ^   ^ <  <  <  <  stack here
+      stack here         stack here              +----+-----+
+    +----+-----+        +----+-----+             |hex |ascii|
+    |hex |ascii|        |hex |ascii|             +----+-----+
+    +----+-----+        +----+-----+           + |  * |  ** |
+=61 |0x61|   ? |     == |  * |   - |             +----+-----+
+"a" |  ? |  'a'|    "0" |0x48|  '0'|             *0x48 if not equal
+    +----+-----+        +----+-----+              0x49 if equal
+                        *0x00 if not equal       **'0' if not equal
+                         0x01 if equal             '1' if equal
+
+This program check if 0x61 is equal to the character 'a'. If it is print '1' else print '0'.
