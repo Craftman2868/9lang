@@ -181,7 +181,16 @@ int execInstruct(struct program *prog)
     char a, b, c;
     enum instruct instruct = prog->instructs[prog->y][prog->x];
 
-    log("Executing '%c' at %d:%d", renderInstruct(instruct), prog->x, prog->y);
+    if (instruct == I_NULL)
+        log("Executing ? at %d:%d", prog->x, prog->y);
+    else
+        log("Executing '%c' at %d:%d", renderInstruct(instruct), prog->x, prog->y);
+
+    if (instruct == I_NULL)
+    {
+        progError(prog, "Unknown instruction");
+        return 1;  // Error
+    }
 
     switch (prog->mode)
     {
@@ -263,6 +272,7 @@ int execInstruct(struct program *prog)
         if ((instruct < '0' || instruct > '9') && (instruct < 'A' || instruct > 'F'))
         {
             progError(prog, "Invalid instruction in equal mode");
+            return 1;
         }
 
         a = (char) instruct;
@@ -399,9 +409,9 @@ int execInstruct(struct program *prog)
         break;
 
     // Unknown / not implemented
-    case I_NULL:  // Unknown instruction
-        progError(prog, "Unknown instruction\n");
-        return 1;  // Error    
+ // case I_NULL:  // Unknown instruction  // Cached below
+ //     progError(prog, "Unknown instruction");
+ //     return 1;  // Error
     default:
         warn(prog, "Not implemented");
         break;  // Not implemented
@@ -414,7 +424,7 @@ void nextInstruct(struct program *prog)
 #if OUT_IS_ERROR
 #define CURSOR_OUT(dir) progError(prog, "Can't go " dir " anymore")
 #else
-#define CURSOR_OUT(dir) prog->running = false
+#define CURSOR_OUT(dir) warn(prog, "Can't go " dir " anymore"); prog->running = false
 #endif
 
     switch (prog->direction)
@@ -475,10 +485,13 @@ int runProgram(struct program *prog)
     while (prog->running && execInstruct(prog) == 0 && prog->running)
         nextInstruct(prog);
 
-    if (prog->mode != M_NORMAL)
+    if (!prog->error && prog->mode != M_NORMAL)
+    {
         printf("Error: program didn't finish in normal mode\n");
+        prog->error = true;        
+    }
 
-    return 0;
+    return (int) prog->error;
 }
 
 void freeProgram(struct program *prog)
@@ -491,7 +504,7 @@ void freeProgram(struct program *prog)
         free(prog->instructs);
     }
 
-    if (prog->stack_pointer != prog->stack)
+    if (!prog->error && prog->stack_pointer != prog->stack)
         log("Warning: %ld bytes remaining on the stack after the program end.", prog->stack_pointer - prog->stack);
 
     if (prog->stack)
@@ -502,6 +515,10 @@ void freeProgram(struct program *prog)
 
 void progError(struct program *prog, char *message)
 {
-    printf("Error at %d:%d ('%c'): %s\n", prog->x, prog->y, renderInstruct(prog->instructs[prog->y][prog->x]), message);
+    if (prog->instructs[prog->y][prog->x] == I_NULL)
+        printf("Error at %d:%d (?): %s\n", prog->x, prog->y, message);
+    else
+        printf("Error at %d:%d ('%c'): %s\n", prog->x, prog->y, renderInstruct(prog->instructs[prog->y][prog->x]), message);
     prog->running = false;
+    prog->error = true;
 }

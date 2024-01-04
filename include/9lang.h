@@ -26,10 +26,15 @@
 #if DEBUG
 #define log(f, ...) fprintf(stderr, f "\n", ##__VA_ARGS__)
 #else  // !DEBUG
-#define log(...) {}
+#define log(...) NULL
 #endif  // DEBUG
 
-#define warn(prog, f, ...) log("Warning at [%d:%d] ('%c'): " f, prog->x, prog->y, prog->instructs[prog->y][prog->x], ##__VA_ARGS__)
+#define warn(prog, f, ...) {\
+    if (prog->instructs[prog->y][prog->x] == I_NULL)\
+        log("Warning at [%d:%d] (?): " f, prog->x, prog->y, ##__VA_ARGS__);\
+    else\
+        log("Warning at [%d:%d] ('%c'): " f, prog->x, prog->y, renderInstruct(prog->instructs[prog->y][prog->x]), ##__VA_ARGS__);\
+}
 
 #define STRINGIZE(x) #x
 
@@ -58,6 +63,7 @@ struct program {
 
     // Running
     bool running;
+    bool error;
 
     // Modes
     enum mode mode;
