@@ -1,0 +1,6 @@
+{
+    "program": "stack_empty.9",
+    "out": "Error at 0:0 ('/'): Stack empty\n",
+    "timeout": 0.1,
+    "code": 1
+}
