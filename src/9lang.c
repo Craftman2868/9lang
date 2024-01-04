@@ -165,7 +165,9 @@ int peekstack(struct program *prog, char *b)
         return 1;
     }
 
-    *b = *(prog->stack_pointer);
+    *b = *(prog->stack_pointer-1);
+
+    log("Peeked byte %d from the stack", *prog->stack_pointer);
 
     return 0;
 }
@@ -487,7 +489,7 @@ int runProgram(struct program *prog)
 
     if (!prog->error && prog->mode != M_NORMAL)
     {
-        printf("Error: program didn't finish in normal mode\n");
+        printf("Error: Program didn't finish in normal mode\n");
         prog->error = true;        
     }
 

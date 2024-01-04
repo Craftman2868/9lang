@@ -36,7 +36,9 @@
         log("Warning at [%d:%d] ('%c'): " f, prog->x, prog->y, renderInstruct(prog->instructs[prog->y][prog->x]), ##__VA_ARGS__);\
 }
 
-#define STRINGIZE(x) #x
+#define _STRINGIZE(x) #x
+#define STRINGIZE(x) _STRINGIZE(x)
+
 
 enum direction {
     D_UP    = '^',
