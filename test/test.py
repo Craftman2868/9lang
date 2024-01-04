@@ -40,7 +40,7 @@ def log(*txt, err=False):
             printLog(f"Logging to {name}")
 
     if logFile:
-        print((a.replace(C_RESET, "").replace(C_RED, "").replace(C_GREEN, "").replace(C_YELLOW, "") for a in txt), file=logFile)
+        print(" ".join(str(a).replace(C_RESET, "").replace(C_RED, "").replace(C_GREEN, "").replace(C_YELLOW, "") for a in txt), file=logFile)
     print(*txt, file=(stderr if err else None))
 
 def closeLog():
@@ -323,7 +323,7 @@ def main():
                 if not r["test"]:
                     printError(f"    => {t}: " + printTestResConds(r))
 
-    printLog(f"[{C_GREEN}{'='*passed}{C_YELLOW}{'='*other}{C_RED}{'='*failed}{C_RESET}]")
+    printLog(f"[{C_GREEN}{'='*passed}{C_YELLOW}{'~'*other}{C_RESET}{' '*failed}]")
 
     closeLog()
 
