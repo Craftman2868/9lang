@@ -1,0 +1,7 @@
+{
+    "program": "program.9",
+    "in": "n\n",
+    "out": "Error at 3:2 (?): Unknown instruction\n",
+    "code": 1,
+    "timeout": 0.2
+}

@@ -1,0 +1,7 @@
+{
+    "program": "condition.9",
+    "in": "b\n",
+    "out": "Nope!",
+    "timeout": 0.2,
+    "code": 0
+}
