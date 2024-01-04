@@ -48,7 +48,7 @@ def closeLog():
         logFile.close()
 
 def printError(msg: str = "Error"):
-    log(f"{C_RED}[{step.center(8)}]{C_RESET} {' ' if msg.startswith(' ') else '-'} {msg}", err=True)
+    log(f"[{C_RED}{step.center(8)}{C_RESET}] {' ' if msg.startswith(' ') else '-'} {msg}", err=True)
 
 def error(msg: str = None):
     printError(msg)
@@ -56,10 +56,10 @@ def error(msg: str = None):
     exit()
 
 def printSuccess(msg: str = None):
-    log(f"{C_GREEN}[{step.center(8)}]{C_RESET}{(('   ' if msg.startswith(' ') else ' - ') + msg) if msg else ''}")
+    log(f"[{C_GREEN}{step.center(8)}{C_RESET}]{(('   ' if msg.startswith(' ') else ' - ') + msg) if msg else ''}")
 
 def printWarning(msg: str = None):
-    log(f"{C_YELLOW}[{step.center(8)}]{C_RESET}{(('   ' if msg.startswith(' ') else ' - ') + msg) if msg else ''}")
+    log(f"[{C_YELLOW}{step.center(8)}{C_RESET}]{(('   ' if msg.startswith(' ') else ' - ') + msg) if msg else ''}")
 
 def printCommand(command: str):
     log(f"[{step.center(8)}] > {command}")
@@ -122,6 +122,8 @@ def tests(testStep):
 
 def testCommand(command, testConfig):
     res = {}
+
+    printCommand(command)
 
     try:
         completed_proc = subprocess.run(args=command, shell=True, text=True, capture_output=True, timeout=testConfig.get("timeout", None), input=testConfig.get("in", ""))
@@ -323,7 +325,7 @@ def main():
                 if not r["test"]:
                     printError(f"    => {t}: " + printTestResConds(r))
 
-    printLog(f"[{C_GREEN}{'='*passed}{C_YELLOW}{'~'*other}{C_RESET}{' '*failed}]")
+    printLog(f"Final result: [{C_GREEN}{'='*passed}{C_YELLOW}{'~'*other}{C_RESET}{' '*failed}]")
 
     closeLog()
 
