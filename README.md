@@ -17,3 +17,13 @@ The interpreter executable is named `9`, it only takes 1 argument: the path to t
 
 In the [index](docs/index.md) documentation page there is an example with an explaination.
 Examples are also available in the `examples/` directory.
+
+
+## Building
+
+See [Building](docs/building.md).
+
+
+## Installing
+
+No release are available yet, you need to build and use the ̀`make install` command
