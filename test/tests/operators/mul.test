@@ -1,5 +1,5 @@
 {
-    "program": "operators.9",
+    "program": "mul.9",
     "out": "B",
     "timeout": 0.1,
     "code": 0
