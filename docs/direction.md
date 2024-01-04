@@ -11,28 +11,28 @@ The default direction (when the program starts) is **Right**.
 *For example:* if the direction is **Right** and the [interpreter](interpreter.md) have just executed the instruction `3:2`, the next intruction will be `4:2`.
 
 Direction can be modified using the following instructions:
-  - `^` (go **Up**)
+  - **UP** `^`
     ```
     .X.
     XXX
     ...
     ```
 
-  - `v` (go **Down**)
+  - **DOWN** `v`
     ```
     ...
     XXX
     .X.
     ```
 
-  - `<` (go **Left**)
+  - **LEFT** `<`
     ```
     .X.
     XX.
     .X.
     ```
 
-  - `>` (go **Right**)
+  - **RIGHT** `>`
     ```
     .X.
     .XX

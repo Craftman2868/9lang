@@ -25,4 +25,4 @@ There are 3 comparison operators in *9lang*:
     ```
     *(`.`s represents spaces and `X`s represents any other character)*
 
-When the [interpreter](interpreter.md) see a comparison operator it [unstack](stack.md) first 1 byte `b` then 1 byte `a`. It compare them (e.g. `a` < `b`) and it [stack](stack.md) the result (`1` for *true*, `0` for *false*). You can now use the [conditional operator `?`](modes.md).
+When the [interpreter](interpreter.md) execute a comparison operator it [unstack](stack.md) first 1 byte `b` then 1 byte `a`. It compare them (e.g. `a` < `b`) and it [stack](stack.md) the result (`1` for *true*, `0` for *false*). You can now use the [conditional operator `?`](modes.md).
