@@ -8,5 +8,8 @@ bin/9test: bin src/*.c include/*.h
 
 test: bin/9test
 
+install: bin/9
+	cp bin/9 /bin/9
+
 bin:
 	mkdir -p bin
