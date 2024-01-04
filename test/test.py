@@ -174,23 +174,31 @@ def runTest(testStep, t):
     try:
         with open(testFilePath, "r") as f:
             testConfig = json.load(f)
+
+        assert 'program' in testConfig
     except:
         printError(f"cannot load {testFilePath} (for test {testStep}/{t})")
         closeLog()
         raise
 
-    command = config.get("command", DEFAULT_COMMAND).format(**{
-        "bin": config["bin"],
-        "program": os.path.join(testDir, testConfig["program"]),
-    })
+    programPath = os.path.join(testDir, testConfig["program"])
 
-    testRes.update(testCommand(command, testConfig))
+    if os.path.exists(programPath):
+        command = config.get("command", DEFAULT_COMMAND).format(**{
+            "bin": config["bin"],
+            "program": programPath,
+        })
 
-    testRes["expect"] = testConfig
+        testRes.update(testCommand(command, testConfig))
+
+        testRes["expect"] = testConfig
+    else:
+        testRes[f"Program '{testConfig['program']}' not found!"] = False
+        testRes["test"] = False
 
     return testRes
 
-MAX_LENGTH = 1500
+MAX_LENGTH = 2500
 
 def toString(s):
     if isinstance(s, bytes):
@@ -219,7 +227,8 @@ def printTestRes(testStep, t, res):
         printSuccess(f"{testStep}/{t} - {C_GREEN}Success: " + printTestResConds(res))
     else:
         printError(f"{testStep}/{t} - {C_RED}Error: " + printTestResConds(res))
-        printError(f"{testStep}/{t} stderr:\n" + toString(res["stderr"]))
+        if "stderr" in res:
+            printError(f"{testStep}/{t} stderr:\n" + toString(res["stderr"]))
         if "out" in res and not res["out"]:
             printError(f"{testStep}/{t} stdout:\n" + toString(res["stdout"]))
             printError(f"{testStep}/{t} expected stdout:\n" + str(res["expect"]["out"]))
