@@ -8,6 +8,9 @@ python test.py
 
 The `test/tests` directory containts one directory per tested feature, in each of them there is at least one `.test` and at least one `.9` program.
 
+The tested binary is not `bin/9`, it is `bin/9test` (made by `make test`, executed automatically the test script).
+This binary is always in debug mode, when the [cursor](direction.md) get out it raise an [error](errors.md) and the [stack](stack.md) size is always `512`.
+
 
 ## `.test` format
 
