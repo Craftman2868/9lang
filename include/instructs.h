@@ -31,13 +31,16 @@ enum instruct {
     I_ASCII = '"',
     I_ESCAPE= '\\',
     I_ZERO  = '0',
+    I_EQUAL = '=',
+    I_SHARP = '#',
 
     // Operators
     I_PLUS  = '+',
     I_MINUS = '-',
     I_MUL   = '*',
     I_DIV   = '/',
-    I_EQUAL = '=',
+    I_AND   = '&',
+    I_VBAR  = '|',  // vertical bar
 
     // Comparison operators
     I_OPAR  = '(',  // open parenthesis  (used as <)
@@ -47,10 +50,10 @@ enum instruct {
     I_SPACE = ' ',
     I_EXCL  = '!',  // exclamation mark
     I_QUOTE = '"',
-    I_SHARP = '#',
+ // I_SHARP = '#',
     I_DOLLAR= '$',
     I_PERCNT= '%',  // percent
-    I_AND   = '&',
+ // I_AND   = '&',
     I_SQUOTE= '\'',  // simple quote
  // I_OPAR  = '(',  // open parenthesis
  // I_CPAR  = ')',  // closed parenthesis
@@ -110,7 +113,7 @@ enum instruct {
     I_UDRSCR= '_',  // underscore
     I_BCKTCK= '`',  // backtrick
     I_OBRACE= '{',  // open brace
-    I_VBAR  = '|',  // vertical bar
+ // I_VBAR  = '|',  // vertical bar
     I_CBRACE= '}',  // closed brace
 
 } __attribute__((__packed__));

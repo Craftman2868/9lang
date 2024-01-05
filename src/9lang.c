@@ -412,6 +412,12 @@ int execInstruct(struct program *prog)
             return stack(prog, b) != 0;  // Success / error (stack full)
         else
             return 1;  // Error (stack empty)
+    case I_EQUAL:   // '='
+        setMode(prog, M_EQUAL);
+        setFlag(prog, F_HIGHPART, true);
+        break;
+    case I_EXCL:   // '!'
+        return unstack(prog, NULL) != 0;  // Success / error (stack empty)
 
     // Operators
     case I_PLUS:    // '+'
@@ -434,10 +440,17 @@ int execInstruct(struct program *prog)
             return stack(prog, a / b) != 0;  // Success / error (stack full, not possible)
         else
             return 1;  // Error (stack empty)
-    case I_EQUAL:   // '='
-        setMode(prog, M_EQUAL);
-        setFlag(prog, F_HIGHPART, true);
-        break;
+    case I_AND:     // '&'
+        if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
+            return stack(prog, a & b) != 0;  // Success / error (stack full, not possible)
+        else
+            return 1;  // Error (stack empty)
+    case I_VBAR:    // '|'
+        if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
+            return stack(prog, a | b) != 0;  // Success / error (stack full, not possible)
+        else
+            return 1;  // Error (stack empty)
+
 
     // Conditions
     //   Comparison operators
