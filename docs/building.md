@@ -36,8 +36,14 @@ sudo make install
 
 ## Windows
 
+Not available on Windows yet.
+
+<!--
 You need [MinGW](https://www.mingw-w64.org/downloads) (for gcc and make).
 
-Download this repo from GitHub (use git if you installed it or download as a zip file and extract it).
+Download this repo from GitHub (use git if you installed it or download the repo as a zip file and extract it)
 
-
+```sh
+make
+```
+-->
