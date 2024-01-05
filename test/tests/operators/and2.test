@@ -1,0 +1,7 @@
+{
+    "program": "and.9",
+    "in": "7",
+    "out": "odd",
+    "timeout": 0.1,
+    "code": 0
+}
