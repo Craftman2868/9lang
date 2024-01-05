@@ -34,7 +34,18 @@ int main(int argc, char *argv[])
 
     if (prog == NULL)
     {
-        printf("%s: cannot load '%s'", argv[0], argv[1]);
+        switch (errorN)
+        {
+        case 1:  // Error opening the file
+            printf("%s: cannot load '%s'", argv[0], argv[1]);
+            break;
+        case 2:  // Not enough memory
+            printf("%s: not enough memory to load the program", argv[0]);
+            break;
+        default:
+            printf("%s: unknown error while program loading", argv[0]);
+            break;
+        }
         return EXIT_FAILURE;
     }
 

@@ -55,6 +55,7 @@
 #define _STRINGIZE(x) #x
 #define STRINGIZE(x) _STRINGIZE(x)
 
+extern int errorN;
 
 enum direction {
     D_UP    = '^',
@@ -108,7 +109,7 @@ struct program {
     char *stack_pointer;
 } __attribute__((__packed__));
 
-// void loadInstructs(struct program *prog);
+// int loadInstructs(struct program *prog);
 struct program *loadProgram(char *path);
 // int stack(struct program *prog, char b);
 // int unstack(struct program *prog, char *b);

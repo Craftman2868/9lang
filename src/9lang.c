@@ -23,6 +23,7 @@
 
 #include "instructs.h"
 
+int errorN = 0;
 
 char renderInstruct(enum instruct instruct)
 {
@@ -32,7 +33,7 @@ char renderInstruct(enum instruct instruct)
     return (char) instruct;
 }
 
-void loadInstructs(struct program *prog, FILE *f)
+int loadInstructs(struct program *prog, FILE *f)
 {
     char instructs[prog->h][prog->w][3*3] = {};
     char c;
@@ -56,8 +57,21 @@ void loadInstructs(struct program *prog, FILE *f)
 
     prog->instructs = malloc(prog->h * sizeof (enum instruct *));
 
+    if (prog->instructs == NULL)
+    {
+        log("Warning: Error allocating %ld byte (for prog->instructs)", prog->h * sizeof (enum instruct *));
+        return 1;  // Malloc error
+    }
+
     for (prog->y = 0; prog->y < prog->h; prog->y++)
+    {
         prog->instructs[prog->y] = malloc(prog->w * sizeof (enum instruct));
+        if (prog->instructs[prog->y] == NULL)
+        {
+            log("Warning: Error allocating %ld byte (for prog->instructs[%d])", prog->w * sizeof (enum instruct), prog->y);
+            return 1;  // Malloc error
+        }
+    }
 
     for (prog->y = 0; prog->y < prog->h; prog->y++)
     {
@@ -68,6 +82,8 @@ void loadInstructs(struct program *prog, FILE *f)
     }
 
     prog->x = prog->y = 0;
+
+    return 0;  // Success
 }
 
 struct program *loadProgram(char *path)
@@ -80,9 +96,20 @@ struct program *loadProgram(char *path)
     FILE *f = fopen(path, "r");
 
     if (f == NULL)
-        return NULL;  // Error opening file
+    {
+        errorN = 1;  // Error opening the file
+        return NULL;
+    }
 
     prog = malloc(sizeof (struct program));
+
+    if (prog == NULL)
+    {
+        log("Warning: Error allocating %ld byte (for prog)", sizeof (struct program));
+        errorN = 2;  // Not enough memory
+        return NULL;
+    }
+
     memset(prog, 0, sizeof (struct program));
 
     prog->direction = DEFAULT_DIRECTION;
@@ -111,7 +138,12 @@ struct program *loadProgram(char *path)
 
     rewind(f);
 
-    loadInstructs(prog, f);
+    if (loadInstructs(prog, f) != 0)
+    {
+        freeProgram(prog);
+        errorN = 2;  // Not enough memory
+        return NULL;
+    }
 
     fclose(f);
 
