@@ -1,0 +1,6 @@
+{
+	"program": "lorem.9",
+	"out": "Lorem ipsum",
+	"timeout": 0.1,
+	"code": 0
+}
