@@ -36,7 +36,7 @@ char renderInstruct(enum instruct instruct)
 int loadInstructs(struct program *prog, FILE *f)
 {
     char instructs[prog->h][prog->w][3*3] = {};
-    char c;
+    int c;
 
     prog->x = prog->y = 0;
     do {
@@ -89,7 +89,7 @@ int loadInstructs(struct program *prog, FILE *f)
 struct program *loadProgram(char *path)
 {
     struct program *prog;
-    char c;
+    int c;
     uint16_t curLineLength = 0;
     uint16_t w = 0, h = 0;
 
