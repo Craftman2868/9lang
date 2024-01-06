@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
 {
     if (argc < 2)
     {
-        printf("Usage: %s program", argv[0]);
+        printf("Usage: %s program\n", argv[0]);
         return EXIT_FAILURE;
     }
 
@@ -37,13 +37,13 @@ int main(int argc, char *argv[])
         switch (errorN)
         {
         case 1:  // Error opening the file
-            printf("%s: cannot load '%s'", argv[0], argv[1]);
+            printf("%s: cannot load '%s'\n", argv[0], argv[1]);
             break;
         case 2:  // Not enough memory
-            printf("%s: not enough memory to load the program", argv[0]);
+            printf("%s: not enough memory to load the program\n", argv[0]);
             break;
         default:
-            printf("%s: unknown error while program loading", argv[0]);
+            printf("%s: unknown error while program loading\n", argv[0]);
             break;
         }
         return EXIT_FAILURE;
