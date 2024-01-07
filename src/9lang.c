@@ -35,7 +35,8 @@ char renderInstruct(enum instruct instruct)
 
 int loadInstructs(struct program *prog, FILE *f)
 {
-    char instructs[prog->h][prog->w][3*3] = {};
+    char instructs[prog->h][prog->w][3*3];
+    memset(instructs, 0, sizeof (instructs));
     int c;
 
     prog->x = prog->y = 0;
@@ -59,7 +60,7 @@ int loadInstructs(struct program *prog, FILE *f)
 
     if (prog->instructs == NULL)
     {
-        log("Warning: Error allocating %ld byte (for prog->instructs)", prog->h * sizeof (enum instruct *));
+        log("Warning: Error allocating %u byte (for prog->instructs)", prog->h * sizeof (enum instruct *));
         return 1;  // Malloc error
     }
 
@@ -68,7 +69,7 @@ int loadInstructs(struct program *prog, FILE *f)
         prog->instructs[prog->y] = malloc(prog->w * sizeof (enum instruct));
         if (prog->instructs[prog->y] == NULL)
         {
-            log("Warning: Error allocating %ld byte (for prog->instructs[%d])", prog->w * sizeof (enum instruct), prog->y);
+            log("Warning: Error allocating %u byte (for prog->instructs[%d])", prog->w * sizeof (enum instruct), prog->y);
             return 1;  // Malloc error
         }
     }
@@ -105,7 +106,7 @@ struct program *loadProgram(char *path)
 
     if (prog == NULL)
     {
-        log("Warning: Error allocating %ld byte (for prog)", sizeof (struct program));
+        log("Warning: Error allocating %u byte (for prog)", sizeof (struct program));
         errorN = 2;  // Not enough memory
         return NULL;
     }
@@ -551,7 +552,7 @@ int runProgram(struct program *prog)
     if (!prog->error && prog->mode != M_NORMAL)
     {
         printf("Error: Program didn't finish in normal mode\n");
-        prog->error = true;        
+        prog->error = true;
     }
 
     return (int) prog->error;
@@ -568,7 +569,7 @@ void freeProgram(struct program *prog)
     }
 
     if (!prog->error && prog->stack_pointer != prog->stack)
-        log("Warning: %ld bytes remaining on the stack after the program end.", prog->stack_pointer - prog->stack);
+        log("Warning: %u bytes remaining on the stack after the program end.", prog->stack_pointer - prog->stack);
 
     if (prog->stack)
         free(prog->stack);
