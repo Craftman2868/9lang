@@ -71,6 +71,7 @@ enum mode {
     M_ASCII,
     M_EQUAL,
     M_COND,
+    M_NO_MOVE,
 } __attribute__((__packed__));
 
 struct program {

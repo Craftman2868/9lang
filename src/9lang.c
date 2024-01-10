@@ -363,17 +363,29 @@ int execInstruct(struct program *prog)
         break;
     }
 
+    // Normal mode
     switch (instruct)
     {
     case I_PASS:
         break;
 
-    // Directions
+    // Moves
+    //   Directions
     case I_UP:      // '^'
     case I_DOWN:    // 'v'
     case I_LEFT:    // '<'
     case I_RIGHT:   // '>'
         prog->direction = (enum direction) instruct;
+        break;
+    //   Set pos
+    case I_AT:
+        if (unstack(prog, &b) != 0)
+            return 1;  // error (stack empty)
+        if (unstack(prog, &a) != 0)
+            return 1;  // Error (stack empty)
+        prog->x = a;
+        prog->y = b;
+        setMode(prog, M_NO_MOVE);
         break;
 
     // Exit
@@ -485,6 +497,12 @@ int execInstruct(struct program *prog)
 }
 void nextInstruct(struct program *prog)
 {
+    if (prog->mode == M_NO_MOVE)
+    {
+        resetMode(prog);
+        return;
+    }
+
 #if OUT_IS_ERROR
 #define CURSOR_OUT(dir) progError(prog, "Can't go " dir " anymore")
 #else
