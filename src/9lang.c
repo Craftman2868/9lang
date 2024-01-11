@@ -161,6 +161,7 @@ int initStack(struct program *prog, struct stack **stack_ptr)
 
     if (*stack_ptr == NULL)
     {
+        errorN = 2;  // Not enough memory
         log("Warning: Error allocating %lu byte (for prog->stacks[%u])", sizeof (struct stack), (unsigned int) STACK_N(prog));
         return 1;
     }
@@ -440,15 +441,50 @@ int execInstruct(struct program *prog)
         c = getchar();
         return stack(*prog->cur_stack, c) != 0;  // Success / error (stack full)
 
-    // Stack / Ascii mode
+    // Stacks
+    //   Stack selection
     case I_OBRCKT:  // switch to the next stack
         if (nextStack(prog) != 0)
-            return 1;
+            return 1;  // Error (not enough memory)
         break;
     case I_CBRCKT:  // switch to the previous stack
         if (prevStack(prog) != 0)
             return 1;
         break;
+    case I_OBRACE:  // Unstack one byte from the current stack and move it to the next stack
+        if (unstack(*prog->cur_stack, &b) != 0)
+            return 1;  // Error (stack empty)
+
+        if (nextStack(prog) != 0)
+            return 1;  // Error (not enough memory)
+
+        if (stack(*prog->cur_stack, b) != 0)
+            return 1;  // Error (stack full)
+
+        if (prevStack(prog) != 0)
+            return 1;  // Error (not enough memory, not possible)
+
+        break;
+    case I_CBRACE:  // Unstack one byte from the current stack and move it to the previous stack
+        if (unstack(*prog->cur_stack, &b) != 0)
+            return 1;  // Error (stack empty)
+
+        if (prevStack(prog) != 0)
+            return 1;  // Error (not enough memory)
+
+        if (stack(*prog->cur_stack, b) != 0)
+            return 1;  // Error (stack full)
+
+        if (nextStack(prog) != 0)
+            return 1;  // Error (not enough memory, not possible)
+
+        break;
+    case I_DOLLAR:  // Stack the current stack number % 256
+        if (stack(*prog->cur_stack, (char) STACK_N(prog)) != 0)
+            return 1;  // Error (stack full)
+
+        break;
+    //   The current stack / Ascii mode
     case I_ASCII:   // '"'
         setMode(prog, M_ASCII);
         break;
@@ -610,6 +646,9 @@ int runProgram(struct program *prog)
     prog->running = true;
     while (prog->running && execInstruct(prog) == 0 && prog->running)
         nextInstruct(prog);
+    
+    if (errorN == 2)
+        return 2;  // Not enough memory
 
     if (!prog->error && prog->mode != M_NORMAL)
     {

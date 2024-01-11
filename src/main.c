@@ -53,6 +53,8 @@ int main(int argc, char *argv[])
 
     switch (errorN)
     {
+ // case 1:  // An error occured
+ //     break;
     case 2:  // Not enough memory
         printf("%s: not enough memory to run the program\n", argv[0]);
         break;
