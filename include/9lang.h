@@ -19,6 +19,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #include "instructs.h"
 
@@ -36,6 +37,10 @@
 #ifndef STACK_SIZE
 #define STACK_SIZE 512
 #endif  // STACK_SIZE
+
+#ifndef STACK_COUNT
+#define STACK_COUNT 128
+#endif  // STACK_COUNT
 
 // End of the configuration
 
@@ -74,6 +79,14 @@ enum mode {
     M_NO_MOVE,
 } __attribute__((__packed__));
 
+struct program;
+
+struct stack {
+    char data[STACK_SIZE];
+    char *top;
+    struct program *prog;
+};
+
 struct program {
     // Instructs
     uint16_t w, h;
@@ -105,23 +118,27 @@ struct program {
 #define setMode(prog, m) {prog->mode = m; resetFlags(prog);}
 #define resetMode(prog) setMode(prog, M_NORMAL)
 
-    // Stack
-    char *stack;
-    char *stack_pointer;
-} __attribute__((__packed__));
+    // Stacks
+    struct stack *stacks[STACK_COUNT];
+    struct stack **cur_stack;
+#define STACK_N(prog) ((prog->stacks - prog->cur_stack) / sizeof (*prog->stacks))
+};
 
-// int loadInstructs(struct program *prog);
+int loadInstructs(struct program *prog, FILE *f);
 struct program *loadProgram(char *path);
-// int stack(struct program *prog, char b);
-// int unstack(struct program *prog, char *b);
-// int peekstack(struct program *prog, char *b);
-// void initStack(struct program *prog);
-// void execInstruct(struct program *prog);
-// void nextInstruct(struct program *prog);
+int initStack(struct program *prog, struct stack **stack_ptr);
+int nextStack(struct program *prog);
+int prevStack(struct program *prog);
+int stack(struct stack *stack, char b);
+int unstack(struct stack *stack, char *b);
+int peekstack(struct stack *stack, char *b);
+int execInstruct(struct program *prog);
+void nextInstruct(struct program *prog);
 int runProgram(struct program *prog);
 void freeProgram(struct program *prog);
 
 char renderInstruct(enum instruct instruct);
 void progError(struct program *prog, char *message);
+void stackError(struct stack *stack, char *message);
 
 #endif  // _9LANG_H

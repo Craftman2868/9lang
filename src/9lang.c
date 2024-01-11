@@ -16,6 +16,8 @@
 
 #include "9lang.h"
 
+#define __STDC_WANT_LIB_EXT2__  1  // To enable 'asprintf'
+
 #include <stdio.h>
 #include <string.h>
 #include <malloc.h>
@@ -153,78 +155,96 @@ struct program *loadProgram(char *path)
     return prog;
 }
 
-int stack(struct program *prog, char b)
+int initStack(struct program *prog, struct stack **stack_ptr)
 {
-    if (prog->stack == NULL)
+    *stack_ptr = malloc(sizeof (struct stack));
+
+    if (*stack_ptr == NULL)
     {
-        progError(prog, "Stack not initialized");  // Not possible
-        return -1;
+        log("Warning: Error allocating %lu byte (for prog->stacks[%u])", sizeof (struct stack), (unsigned int) STACK_N(prog));
+        return 1;
     }
 
-    if (prog->stack_pointer - prog->stack >= STACK_SIZE)
+    (*stack_ptr)->top = (*stack_ptr)->data;
+    (*stack_ptr)->prog = prog;
+
+    return 0;
+}
+
+int nextStack(struct program *prog)
+{
+    if (prog->cur_stack != &prog->stacks[STACK_COUNT-1])
+        prog->cur_stack += sizeof (prog->cur_stack);
+    else
+        prog->cur_stack = &prog->stacks[0];
+
+    if (*prog->cur_stack == NULL)
+        return initStack(prog, prog->cur_stack);
+
+    return 0;
+}
+
+int prevStack(struct program *prog)
+{
+    if (prog->cur_stack != &prog->stacks[0])
+        prog->cur_stack -= sizeof (prog->cur_stack);
+    else
+        prog->cur_stack = &prog->stacks[STACK_COUNT-1];
+
+    if (*prog->cur_stack == NULL)
+        return initStack(prog, prog->cur_stack);
+
+    return 0;
+}
+
+int stack(struct stack *stack, char b)
+{
+    if (stack->top - stack->data >= STACK_SIZE)
     {
-        progError(prog, "Stack full (stack size = " STRINGIZE(STACK_SIZE) ")");
+        stackError(stack, "Stack full (stack size = " STRINGIZE(STACK_SIZE) ")");
         return 1;
     }
 
     log("Stack byte %d", b);
 
-    *prog->stack_pointer = b;
+    *stack->top = b;
 
-    prog->stack_pointer++;
+    stack->top++;
 
     return 0;  // Success
 }
 
-int unstack(struct program *prog, char *b)
+int unstack(struct stack *stack, char *b)
 {
-    if (prog->stack == NULL)
+    if (stack->top == stack->data)
     {
-        progError(prog, "Stack not initialized");  // Not possible
-        return -1;
-    }
-
-    if (prog->stack_pointer == prog->stack)
-    {
-        progError(prog, "Stack empty");
+        stackError(stack, "Stack empty");
         return 1;
     }
 
-    prog->stack_pointer--;
+    stack->top--;
 
     if (b != NULL)
-        *b = *prog->stack_pointer;
+        *b = *stack->top;
 
-    log("Unstack byte %d", *prog->stack_pointer);
+    log("Unstack byte %d", *stack->top);
 
     return 0;
 }
 
-int peekstack(struct program *prog, char *b)
+int peekstack(struct stack *stack, char *b)
 {
-    if (prog->stack == NULL)
+    if (stack->top == stack->data)
     {
-        progError(prog, "Stack not initialized");  // Not possible
-        return -1;
-    }
-
-    if (prog->stack_pointer == prog->stack)
-    {
-        progError(prog, "Stack empty");
+        stackError(stack, "Stack empty");
         return 1;
     }
 
-    *b = *(prog->stack_pointer-1);
+    *b = *(stack->top-1);
 
-    log("Peeked byte %d from the stack", *prog->stack_pointer);
+    log("Peeked byte %d from the stack", *stack->top);
 
     return 0;
-}
-
-void initStack(struct program *prog)
-{
-    prog->stack = malloc(STACK_SIZE);
-    prog->stack_pointer = prog->stack;
 }
 
 int execInstruct(struct program *prog)
@@ -257,35 +277,35 @@ int execInstruct(struct program *prog)
                 setFlag(prog, F_UPPERCASE, false);
                 break;
             case I_ZERO:
-                stack(prog, 0);
+                stack(*prog->cur_stack, 0);
                 break;
             case 'A':
-                stack(prog, '\a');
+                stack(*prog->cur_stack, '\a');
                 break;
             case 'B':
-                stack(prog, '\b');
+                stack(*prog->cur_stack, '\b');
                 break;
             case 'E':
-                stack(prog, '\033');
+                stack(*prog->cur_stack, '\033');
                 break;
             case 'F':
-                stack(prog, '\f');
+                stack(*prog->cur_stack, '\f');
                 break;
             case 'N':
-                stack(prog, '\n');
+                stack(*prog->cur_stack, '\n');
                 break;
             case 'R':
-                stack(prog, '\r');
+                stack(*prog->cur_stack, '\r');
                 break;
             case 'T':
-                stack(prog, '\t');
+                stack(*prog->cur_stack, '\t');
                 break;
             case 'V':
-                stack(prog, '\v');
+                stack(*prog->cur_stack, '\v');
                 break;
             case '\\':
             case '"':
-                stack(prog, (char) instruct);
+                stack(*prog->cur_stack, (char) instruct);
                 break;
             default:
                 progError(prog, "Unknown escape character");
@@ -304,7 +324,7 @@ int execInstruct(struct program *prog)
             setFlag(prog, F_ESCAPE, true);
             break;
         default:
-            stack(prog, (getFlag(prog, F_UPPERCASE)?toupper:tolower)(instruct));
+            stack(*prog->cur_stack, (getFlag(prog, F_UPPERCASE)?toupper:tolower)(instruct));
             break;
         }
 
@@ -314,8 +334,8 @@ int execInstruct(struct program *prog)
         if (getFlag(prog, F_HIGHPART) && instruct == I_EQUAL)  // '=='  (is equal)
         {
             resetMode(prog);
-            if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
-                return stack(prog, a == b) != 0;  // Succeess / error (stack full, not possible)
+            if (unstack(*prog->cur_stack, &b) == 0 && unstack(*prog->cur_stack, &a) == 0)
+                return stack(*prog->cur_stack, a == b) != 0;  // Succeess / error (stack full, not possible)
             else
                 return 1;  // Error (stack empty)
         }
@@ -336,21 +356,21 @@ int execInstruct(struct program *prog)
         if (getFlag(prog, F_HIGHPART))
         {
             setFlag(prog, F_HIGHPART, false);
-            stack(prog, a * 16);
+            stack(*prog->cur_stack, a * 16);
         }
         else
         {
             resetMode(prog);
 
-            if (unstack(prog, &b) == 0)
-                stack(prog, b | a);
+            if (unstack(*prog->cur_stack, &b) == 0)
+                stack(*prog->cur_stack, b | a);
             else
                 return 1;  // Error (stack empty, not possible)
         }
 
         return 0;  // Success
     case M_COND:
-        if (unstack(prog, &b) != 0)
+        if (unstack(*prog->cur_stack, &b) != 0)
             return 1;  // Error (stack empty)
 
         resetMode(prog);
@@ -378,10 +398,10 @@ int execInstruct(struct program *prog)
         prog->direction = (enum direction) instruct;
         break;
     //   Set pos
-    case I_AT:
-        if (unstack(prog, &b) != 0)
-            return 1;  // error (stack empty)
-        if (unstack(prog, &a) != 0)
+   case I_AT:
+        if (unstack(*prog->cur_stack, &b) != 0)
+            return 1;  // Error (stack empty)
+        if (unstack(*prog->cur_stack, &a) != 0)
             return 1;  // Error (stack empty)
         prog->x = a;
         prog->y = b;
@@ -395,12 +415,12 @@ int execInstruct(struct program *prog)
 
     // IO
     case I_PRINT:   // "."
-        if (unstack(prog, &c) == 0)
+        if (unstack(*prog->cur_stack, &c) == 0)
             putc(c, stdout);
         else
             return 1;  // Error (stack empty)
     case I_PRTALL:  // ':'
-        while (prog->stack_pointer != prog->stack && unstack(prog, &c) == 0)
+        while ((*prog->cur_stack)->top != (*prog->cur_stack)->data && unstack(*prog->cur_stack, &c) == 0)
         {
             if (c == 0)
                 break;
@@ -409,9 +429,17 @@ int execInstruct(struct program *prog)
         break;
     case I_READ:    // ','
         c = getchar();
-        return stack(prog, c) != 0;  // Success / error (stack full)
+        return stack(*prog->cur_stack, c) != 0;  // Success / error (stack full)
 
     // Stack / Ascii mode
+    case I_OBRCKT:  // switch to the next stack
+        if (nextStack(prog) != 0)
+            return 1;
+        break;
+    case I_CBRCKT:  // switch to the previous stack
+        if (prevStack(prog) != 0)
+            return 1;
+        break;
     case I_ASCII:   // '"'
         setMode(prog, M_ASCII);
         break;
@@ -419,10 +447,10 @@ int execInstruct(struct program *prog)
         progError(prog, "Escape used outside ascii mode");
         return 1;   // Error
     case I_ZERO:    // '0'
-        return stack(prog, 0) != 0;  // Success / error (stack full)
+        return stack(*prog->cur_stack, 0) != 0;  // Success / error (stack full)
     case I_SHARP:   // '#'
-        if (peekstack(prog, &b) == 0)
-            return stack(prog, b) != 0;  // Success / error (stack full)
+        if (peekstack(*prog->cur_stack, &b) == 0)
+            return stack(*prog->cur_stack, b) != 0;  // Success / error (stack full)
         else
             return 1;  // Error (stack empty)
     case I_EQUAL:   // '='
@@ -430,37 +458,37 @@ int execInstruct(struct program *prog)
         setFlag(prog, F_HIGHPART, true);
         break;
     case I_EXCL:   // '!'
-        return unstack(prog, NULL) != 0;  // Success / error (stack empty)
+        return unstack(*prog->cur_stack, NULL) != 0;  // Success / error (stack empty)
 
     // Operators
     case I_PLUS:    // '+'
-        if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
-            return stack(prog, a + b) != 0;  // Success / error (stack full, not possible)
+        if (unstack(*prog->cur_stack, &b) == 0 && unstack(*prog->cur_stack, &a) == 0)
+            return stack(*prog->cur_stack, a + b) != 0;  // Success / error (stack full, not possible)
         else
             return 1;  // Error (stack empty)
     case I_MINUS:   // '-'
-        if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
-            return stack(prog, a - b) != 0;  // Success / error (stack full, not possible)
+        if (unstack(*prog->cur_stack, &b) == 0 && unstack(*prog->cur_stack, &a) == 0)
+            return stack(*prog->cur_stack, a - b) != 0;  // Success / error (stack full, not possible)
         else
             return 1;  // Error (stack empty)
     case I_MUL:     // '*'
-        if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
-            return stack(prog, a * b) != 0;  // Success / error (stack full, not possible)
+        if (unstack(*prog->cur_stack, &b) == 0 && unstack(*prog->cur_stack, &a) == 0)
+            return stack(*prog->cur_stack, a * b) != 0;  // Success / error (stack full, not possible)
         else
             return 1;  // Error (stack empty)
     case I_DIV:     // '/'
-        if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
-            return stack(prog, a / b) != 0;  // Success / error (stack full, not possible)
+        if (unstack(*prog->cur_stack, &b) == 0 && unstack(*prog->cur_stack, &a) == 0)
+            return stack(*prog->cur_stack, a / b) != 0;  // Success / error (stack full, not possible)
         else
             return 1;  // Error (stack empty)
     case I_AND:     // '&'
-        if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
-            return stack(prog, a & b) != 0;  // Success / error (stack full, not possible)
+        if (unstack(*prog->cur_stack, &b) == 0 && unstack(*prog->cur_stack, &a) == 0)
+            return stack(*prog->cur_stack, a & b) != 0;  // Success / error (stack full, not possible)
         else
             return 1;  // Error (stack empty)
     case I_VBAR:    // '|'
-        if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
-            return stack(prog, a | b) != 0;  // Success / error (stack full, not possible)
+        if (unstack(*prog->cur_stack, &b) == 0 && unstack(*prog->cur_stack, &a) == 0)
+            return stack(*prog->cur_stack, a | b) != 0;  // Success / error (stack full, not possible)
         else
             return 1;  // Error (stack empty)
 
@@ -468,13 +496,13 @@ int execInstruct(struct program *prog)
     // Conditions
     //   Comparison operators
     case I_OPAR:    // '('  (used as '<')
-        if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
-            return stack(prog, a < b) != 0;  // Succeess / error (stack full, not possible)
+        if (unstack(*prog->cur_stack, &b) == 0 && unstack(*prog->cur_stack, &a) == 0)
+            return stack(*prog->cur_stack, a < b) != 0;  // Succeess / error (stack full, not possible)
         else
             return 1;  // Error (stack empty)
     case I_CPAR:    // ')'  (used as '>')
-        if (unstack(prog, &b) == 0 && unstack(prog, &a) == 0)
-            return stack(prog, a > b) != 0;
+        if (unstack(*prog->cur_stack, &b) == 0 && unstack(*prog->cur_stack, &a) == 0)
+            return stack(*prog->cur_stack, a > b) != 0;
         else
             return 1;  // Error (stack empty)
  // case I_EQUAL:  // See in 'if (prog->equal_mode)' above
@@ -561,7 +589,12 @@ int runProgram(struct program *prog)
     }
 #endif
 
-    initStack(prog);
+    prog->cur_stack = &prog->stacks[0];
+
+    if (initStack(prog, prog->cur_stack) != 0)
+    {
+        return 2;  // Not enough memory
+    }
 
     prog->running = true;
     while (prog->running && execInstruct(prog) == 0 && prog->running)
@@ -586,11 +619,17 @@ void freeProgram(struct program *prog)
         free(prog->instructs);
     }
 
-    if (!prog->error && prog->stack_pointer != prog->stack)
-        log("Warning: %lu bytes remaining on the stack after the program end.", prog->stack_pointer - prog->stack);
-
-    if (prog->stack)
-        free(prog->stack);
+    for (unsigned int i = 0; i < STACK_COUNT; i++)
+    {
+        if (prog->stacks[i] != NULL)
+        {
+#if DEBUG
+            if (!prog->error && prog->stacks[i]->top != prog->stacks[i]->data)
+                log("Warning: %lu bytes remaining on the stack after the program end.", prog->stacks[i]->top - prog->stacks[i]->data);
+#endif  // DEBUG
+            free(prog->stacks[i]);
+        }
+    }
 
     free(prog);
 }
@@ -603,4 +642,14 @@ void progError(struct program *prog, char *message)
         printf("Error at %d:%d ('%c'): %s\n", prog->x, prog->y, renderInstruct(prog->instructs[prog->y][prog->x]), message);
     prog->running = false;
     prog->error = true;
+}
+
+void stackError(struct stack *stack, char *message)
+{
+    if (stack->prog->instructs[stack->prog->y][stack->prog->x] == I_NULL)
+        printf("Error at %d:%d (?) (Stack %u): %s\n", stack->prog->x, stack->prog->y, (unsigned int) STACK_N(stack->prog) + 1, message);
+    else
+        printf("Error at %d:%d ('%c') (Stack %u): %s\n", stack->prog->x, stack->prog->y, renderInstruct(stack->prog->instructs[stack->prog->y][stack->prog->x]), (unsigned int) STACK_N(stack->prog) + 1, message);
+    stack->prog->running = false;
+    stack->prog->error = true;
 }

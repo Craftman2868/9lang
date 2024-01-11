@@ -1,7 +1,7 @@
 {
     "program": "stack_full.9",
     "comment": "This test tests the stack full error only if the stack size is 512!",
-    "out": "Error at 2:17 ('0'): Stack full (stack size = 512)\n",
+    "out": "Error at 2:17 ('0') (Stack 1): Stack full (stack size = 512)\n",
     "code": 1,
     "timeout": 0.1
 }

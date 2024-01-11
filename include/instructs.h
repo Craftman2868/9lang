@@ -58,7 +58,7 @@ enum instruct {
  // I_OPAR  = '(',  // open parenthesis
  // I_CPAR  = ')',  // closed parenthesis
     I_STAR  = '*',
-  // I_PLUS = '+',  // (already defined)
+ // I_PLUS  = '+',   // (already defined)
     I_COMMA = ',',
     I_DASH  = '-',
     I_DOT   = '.',
@@ -115,6 +115,7 @@ enum instruct {
     I_OBRACE= '{',  // open brace
  // I_VBAR  = '|',  // vertical bar
     I_CBRACE= '}',  // closed brace
+    I_TILE  = '~',
 
 } __attribute__((__packed__));
 

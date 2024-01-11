@@ -49,9 +49,18 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    retval = runProgram(prog);
+    errorN = runProgram(prog);
+
+    switch (errorN)
+    {
+    case 2:  // Not enough memory
+        printf("%s: not enough memory to run the program\n", argv[0]);
+        break;
+    default:
+        break;
+    }
 
     freeProgram(prog);
 
-    return retval;
+    return errorN ? EXIT_FAILURE : EXIT_SUCCESS;
 }

@@ -1,6 +1,6 @@
 {
     "program": "stack_full_loop.9",
     "timeout": 0.3,
-    "out": "Error at 2:0 ('0'): Stack full (stack size = 512)\n",
+    "out": "Error at 2:0 ('0') (Stack 1): Stack full (stack size = 512)\n",
     "code": 1
 }
