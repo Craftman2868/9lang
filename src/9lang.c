@@ -205,9 +205,9 @@ int stack(struct stack *stack, char b)
         return 1;
     }
 
-    log("Stack byte %d", b);
-
     *stack->top = b;
+
+    log("Stack byte %d", b);
 
     stack->top++;
 
@@ -242,7 +242,7 @@ int peekstack(struct stack *stack, char *b)
 
     *b = *(stack->top-1);
 
-    log("Peeked byte %d from the stack", *stack->top);
+    log("Peeked byte %d from the stack", *(stack->top-1));
 
     return 0;
 }
@@ -346,24 +346,24 @@ int execInstruct(struct program *prog)
             return 1;
         }
 
-        a = (char) instruct;
+        c = (char) instruct;
 
-        if (a > 'A')
-            a = a - 'A' + 10;
+        if (c >= 'A')
+            c = c - 'A' + 10;
         else
-            a = a - '0';
+            c = c - '0';
 
         if (getFlag(prog, F_HIGHPART))
         {
             setFlag(prog, F_HIGHPART, false);
-            stack(*prog->cur_stack, a * 16);
+            stack(*prog->cur_stack, c << 4);
         }
         else
         {
             resetMode(prog);
 
             if (unstack(*prog->cur_stack, &b) == 0)
-                stack(*prog->cur_stack, b | a);
+                stack(*prog->cur_stack, b | c);
             else
                 return 1;  // Error (stack empty, not possible)
         }
@@ -374,10 +374,11 @@ int execInstruct(struct program *prog)
             return 1;  // Error (stack empty)
 
         resetMode(prog);
+
         if (b == 0)
-            return 0;  // Success (don't execute the instruction)
+            return 0;  // Success (Condition false: don't execute the instruction)
      // else
-        break;  // execute the instruction...
+        break;  // Condition true: execute the instruction...
     case M_NORMAL:
     default:
         break;
@@ -397,8 +398,9 @@ int execInstruct(struct program *prog)
     case I_RIGHT:   // '>'
         prog->direction = (enum direction) instruct;
         break;
-    //   Set pos
-   case I_AT:
+    // Functions
+    //   Jump
+    case I_AT:
         if (unstack(*prog->cur_stack, &b) != 0)
             return 1;  // Error (stack empty)
         if (unstack(*prog->cur_stack, &a) != 0)
@@ -406,6 +408,13 @@ int execInstruct(struct program *prog)
         prog->x = a;
         prog->y = b;
         setMode(prog, M_NO_MOVE);
+        break;
+    //   Stack the current position
+    case I_TILE:
+        if (stack(*prog->cur_stack, (char) prog->x) != 0)
+            return 1;  // Error (stack full)
+        if (stack(*prog->cur_stack, (char) prog->y) != 0)
+            return 1;  // Error (stack full)
         break;
 
     // Exit
@@ -533,8 +542,10 @@ void nextInstruct(struct program *prog)
 
 #if OUT_IS_ERROR
 #define CURSOR_OUT(dir) progError(prog, "Can't go " dir " anymore")
-#else
+#elif DEBUG
 #define CURSOR_OUT(dir) warn(prog, "Can't go " dir " anymore"); prog->running = false
+#else
+#define CURSOR_OUT(...) NULL
 #endif
 
     switch (prog->direction)
@@ -625,7 +636,7 @@ void freeProgram(struct program *prog)
         {
 #if DEBUG
             if (!prog->error && prog->stacks[i]->top != prog->stacks[i]->data)
-                log("Warning: %lu bytes remaining on the stack after the program end.", prog->stacks[i]->top - prog->stacks[i]->data);
+                log("Warning: %lu bytes remaining on the stack (Stack %u) after the program end.", prog->stacks[i]->top - prog->stacks[i]->data, (unsigned int) STACK_N(prog) + 1);
 #endif  // DEBUG
             free(prog->stacks[i]);
         }

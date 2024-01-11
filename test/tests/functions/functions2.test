@@ -1,0 +1,7 @@
+{
+    "program": "functions.9",
+    "in": "Hello world\n",
+    "out": "? dlrow olleH",
+    "timeout": 0.2,
+    "code": 0
+}
