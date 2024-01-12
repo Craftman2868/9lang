@@ -124,20 +124,31 @@ struct program {
 #define STACK_N(prog) ((prog->stacks - prog->cur_stack) / sizeof (*prog->stacks))
 };
 
+char renderInstruct(enum instruct instruct);
+
 int loadInstructs(struct program *prog, FILE *f);
+
 struct program *loadProgram(char *path);
+
 int initStack(struct program *prog, struct stack **stack_ptr);
+
 int nextStack(struct program *prog);
 int prevStack(struct program *prog);
+
 int stack(struct stack *stack, char b);
+int stack_prog(struct program *prog, char b);
 int unstack(struct stack *stack, char *b);
+int unstack_prog(struct program *prog, char *b);
 int peekstack(struct stack *stack, char *b);
+int peekstack_prog(struct program *prog, char *b);
+
 int execInstruct(struct program *prog);
 void nextInstruct(struct program *prog);
+
 int runProgram(struct program *prog);
+
 void freeProgram(struct program *prog);
 
-char renderInstruct(enum instruct instruct);
 void progError(struct program *prog, char *message);
 void stackError(struct stack *stack, char *message);
 
