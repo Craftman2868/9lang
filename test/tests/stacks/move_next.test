@@ -1,0 +1,6 @@
+{
+    "program": "move_next.9",
+    "out": "hello",
+    "timeout": 0.1,
+    "code": 0
+}

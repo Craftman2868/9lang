@@ -1,0 +1,7 @@
+{
+    "program": "reverse.9",
+    "in": "Hello, world!\n",
+    "out": "? Hello, world!\n",
+    "timeout": 0.2,
+    "code": 0
+}
