@@ -27,6 +27,29 @@
 
 int errorN = 0;
 
+
+#if DEBUG
+void logStack(struct stack *stack)
+{
+    if (stack->top == stack->data)
+        log("prog->stack[%u] {}", (unsigned int) STACK_N(stack->prog));
+    else
+    {
+        log("prog->stack[%u] {", (unsigned int) STACK_N(stack->prog));
+        for (unsigned short i = 0; i < (stack->top - stack->data); i++)
+        {
+            if (stack->data[i] > 31)
+                log("    %03d '%c',", stack->data[i], stack->data[i]);
+            else
+                log("    %03d,", stack->data[i]);
+        }
+        log("}");
+    }
+}
+#else
+#define logStack(...) NULL
+#endif
+
 char renderInstruct(enum instruct instruct)
 {
     if (instruct == I_NULL)
@@ -459,12 +482,16 @@ int execInstruct(struct program *prog)
     // Stacks
     //   Stack selection
     case I_OBRCKT:  // switch to the next stack
+        // logStack(*prog->cur_stack);
         if (nextStack(prog) != 0)
             return 1;  // Error (not enough memory)
+        // logStack(*prog->cur_stack);
         break;
     case I_CBRCKT:  // switch to the previous stack
+        // logStack(*prog->cur_stack);
         if (prevStack(prog) != 0)
             return 1;
+        // logStack(*prog->cur_stack);
         break;
     case I_OBRACE:  // Unstack one byte from the current stack and move it to the next stack
         if (unstack_prog(prog, &b) != 0)
@@ -568,10 +595,15 @@ int execInstruct(struct program *prog)
  // case I_EQUAL:  // See in 'if (prog->equal_mode)' above
  //     ...
     //   Conditional mode
-     case I_QMARK:  // '?'
+    case I_QMARK:  // '?'
         setMode(prog, M_COND)
         break;
-
+    
+#if DEBUG
+    case I_BCKTCK:
+        logStack(*prog->cur_stack);
+        break;
+#endif
     // Unknown / not implemented
  // case I_NULL:  // Unknown instruction  // Cached below
  //     progError(prog, "Unknown instruction");
@@ -711,6 +743,9 @@ void progError(struct program *prog, char *message)
 
 void stackError(struct stack *stack, char *message)
 {
+#if DEBUG
+    logStack(stack);
+#endif
     if (stack->prog->instructs[stack->prog->y][stack->prog->x] == I_NULL)
         printf("Error at %d:%d (?) (Stack %u): %s\n", stack->prog->x, stack->prog->y, (unsigned int) STACK_N(stack->prog) + 1, message);
     else

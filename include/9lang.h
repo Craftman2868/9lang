@@ -121,8 +121,10 @@ struct program {
     // Stacks
     struct stack *stacks[STACK_COUNT];
     struct stack **cur_stack;
-#define STACK_N(prog) ((prog->stacks - prog->cur_stack) / sizeof (*prog->stacks))
+#define STACK_N(prog) ((prog->cur_stack - prog->stacks) / sizeof (*prog->stacks))
 };
+
+// void logStack(struct stack *stack);
 
 char renderInstruct(enum instruct instruct);
 
