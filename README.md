@@ -26,4 +26,4 @@ See [Building](docs/building.md).
 
 ## Installing
 
-No release are available yet, you need to build and use the ̀`make install` command
+No release are available yet, you need to build and use the `make install` command.
